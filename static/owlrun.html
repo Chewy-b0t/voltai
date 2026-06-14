@@ -167,6 +167,9 @@ button:hover{opacity:.9}
     <div class="status-dot"></div>
     <div class="header-stat">Gateway: <span>Online</span></div>
     <div class="header-stat">Node: <span id="node-id">voltai-local</span></div>
+    <span id="version" style="opacity:0.7;font-weight:500;font-size:14px;background:var(--bg-card-hover);padding:2px 8px;border-radius:4px;border:1px solid var(--border);margin-left:4px"></span>
+    <span id="network-badge" class="network-badge" style="display:none"></span>
+    <span id="provider-key" style="font-size:12px;color:var(--text-muted);cursor:pointer;font-family:monospace"></span>
     <div class="theme-label"><div class="theme-toggle" onclick="toggleTheme()"></div></div>
   </div>
 </div>
@@ -392,8 +395,6 @@ button:hover{opacity:.9}
   <div class="card">
     <div class="card-title">Status</div>
     <div id="state-badge" class="state-badge">—</div>
-    <div class="node-id" id="node-id"></div>
-    <div class="node-id" id="provider-key" style="cursor:pointer;user-select:all" title="Click to copy"></div>
     <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
       <div id="models-section"></div>
     </div>
