@@ -7,6 +7,7 @@ Grandma-friendly: visit → sign up → add credits → use API.
 """
 
 import os, json, secrets, asyncio
+from pathlib import Path
 from datetime import datetime
 
 import httpx
@@ -262,6 +263,8 @@ async def api_me(request: Request):
         "keys": [dict(k) for k in keys],
         "stats": {"total_credits": total_credits, "total_used": total_used, "today_tokens": today},
         "usage_7d": [dict(u) for u in usage_7d],
+        "ln_address": LN_ADDRESS,
+        "price_per_m": PRICE,
     }
 
 # ─── Key Management ─────────────────────────────────────────────────
@@ -492,6 +495,138 @@ async def landing(request: Request):
     if user:
         return RedirectResponse("/app", status_code=303)
     return HTMLResponse(LANDING_HTML)
+
+@app.get("/owlrun")
+async def owlrun_dashboard():
+    """Serve the Owlrun-style dashboard."""
+    from fastapi.responses import HTMLResponse
+    html_path = Path("/home/y/voltai/static/owlrun.html")
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text())
+    return HTMLResponse(content="<h1>Owlrun dashboard not found</h1>", status_code=404)
+
+@app.get("/api/status")
+async def owlrun_status(request: Request):
+    """Owlrun-compatible status endpoint."""
+    user = get_user(request)
+    username = user["username"] if user else "guest"
+    
+    # Get Ollama models
+    models = []
+    try:
+        resp = await client.get(f"{OLLAMA_URL}/api/tags")
+        models = [m["name"] for m in resp.json().get("models", [])]
+    except:
+        pass
+    
+    return {
+        "node_id": "voltai-local",
+        "provider_key": "local",
+        "version": "0.1.0-voltai",
+        "network": "local",
+        "state": "earning",
+        "job_mode": "always",
+        "wallet": {
+            "address": LN_ADDRESS,
+            "configured": True,
+            "configured": "Lightning payouts active"
+        },
+        "gpu": {
+            "name": "Local GPU",
+            "vendor": "unknown",
+            "vram_total_mb": 0,
+            "util_pct": 0,
+            "vram_free_mb": 0,
+            "temp_c": 0,
+            "power_w": 0,
+            "vram_exact": False
+        },
+        "model": models[0] if models else "none",
+        "models": models,
+        "model_pricing": {"per_m_input_usd": 0, "per_m_output_usd": 0},
+        "all_model_pricing": {},
+        "earnings": {"today_usd": 0, "total_usd": 0},
+        "gateway": {
+            "connected": True,
+            "status": "voltai",
+            "jobs_today": 0,
+            "tokens_today": 0,
+            "earned_today_usd": 0,
+            "earned_today_sats": 0,
+            "earned_total_sats": 0,
+            "queue_depth_global": 0
+        },
+        "disk": {"path": "/", "total_gb": 0, "free_gb": 0, "free_pct": 0},
+        "available_models": [{"tag": m, "vram_gb": 0, "installed": True, "active": True, "fits": True} for m in models],
+        "pulling": False,
+        "context_length": 8192,
+        "keep_warm": True,
+        "free_tier_pct": 0,
+        "karma_score": 0,
+        "karma_tier": "",
+        "free_tier_jobs": 0,
+        "lightning_address": LN_ADDRESS,
+        "redeem_threshold": 100,
+        "btc_price": {"live_usd": 0, "yesterday_fix": 0, "daily_avg": 0, "weekly_avg": 0, "status": "local"},
+        "broadcasts": [],
+        "sats_wallet": {"gateway_sats": 0, "local_sats": 0, "total_sats": 0, "usd_approx": 0, "proof_count": 0, "last_claim": "", "last_token": "", "token_history": [], "withdraw_history": []}
+    }
+
+@app.get("/api/history")
+async def owlrun_history(period: str = "24h"):
+    """Owlrun-compatible history endpoint."""
+    return {"period": period, "buckets": []}
+
+@app.post("/api/claim-ecash")
+async def owlrun_claim():
+    """Owlrun-compatible claim endpoint (not supported)."""
+    return {"error": "ecash claims handled by VoltAI gateway"}
+
+@app.post("/api/set-lightning-address")
+async def owlrun_set_ln(request: Request):
+    """Owlrun-compatible set address endpoint."""
+    data = await request.json()
+    return {"status": "ok", "address": data.get("address", LN_ADDRESS)}
+
+@app.post("/api/set-redeem-threshold")
+async def owlrun_set_threshold(request: Request):
+    return {"status": "ok", "threshold": 100}
+
+@app.post("/api/switch-model")
+async def owlrun_switch_model(request: Request):
+    return {"status": "ok", "model": "managed by VoltAI"}
+
+@app.post("/api/pull-model")
+async def owlrun_pull_model(request: Request):
+    from fastapi.responses import StreamingResponse
+    async def gen():
+        yield 'data: {"status":"managed by VoltAI"}\n\n'
+        yield 'data: {"status":"done"}\n\n'
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+@app.post("/api/remove-model")
+async def owlrun_remove_model(request: Request):
+    return {"status": "ok", "model": "managed by VoltAI"}
+
+@app.post("/api/set-job-mode")
+async def owlrun_set_job_mode(request: Request):
+    return {"status": "ok", "mode": "always"}
+
+@app.post("/api/set-context-length")
+async def owlrun_set_ctx(request: Request):
+    return {"status": "ok", "context_length": 8192}
+
+@app.post("/api/set-free-tier")
+async def owlrun_set_free_tier(request: Request):
+    return {"status": "ok", "free_tier_pct": 0}
+
+@app.post("/api/set-keep-warm")
+async def owlrun_set_keep_warm(request: Request):
+    return {"status": "ok", "keep_warm": True}
+
+@app.get("/api/model-size")
+async def owlrun_model_size(model: str = ""):
+    return {"model": model, "size_mb": 0, "source": "estimate"}
 
 # ─── Start ───────────────────────────────────────────────────────────
 if __name__ == "__main__":
