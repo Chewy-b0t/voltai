@@ -132,6 +132,7 @@ footer{padding:40px 0;border-top:1px solid var(--border);text-align:center;color
     <div class="model-card"><div class="name">Qwen 2.5 Coder 7B</div><div class="size">5 GB VRAM</div><div class="price">30 sats/M</div></div>
     <div class="model-card"><div class="name">Qwen 3.5 9B</div><div class="size">7 GB VRAM</div><div class="price">40 sats/M</div></div>
     <div class="model-card"><div class="name">Qwen 2.5 14B</div><div class="size">10 GB VRAM</div><div class="price">50 sats/M</div></div>
+    <div class="model-card"><div class="name">Qwen 3.6 27B</div><div class="size">17 GB VRAM</div><div class="price">80 sats/M</div></div>
   </div>
 </div>
 
@@ -393,13 +394,13 @@ th{color:var(--dim);font-size:11px;text-transform:uppercase;font-weight:600}
 <div class="sidebar">
   <div class="logo">Volt<span>AI</span></div>
   <nav>
-    <a href="#" class="active" onclick="showTab('overview')">&#9673; Overview</a>
-    <a href="#" onclick="showTab('keys')">&#9881; API Keys</a>
-    <a href="#" onclick="showTab('wallet')">&#9883; Wallet</a>
-    <a href="#" onclick="showTab('models')">&#9881; Models</a>
-    <a href="#" onclick="showTab('usage')">&#9879; Usage</a>
-    <a href="#" onclick="showTab('errors')">&#9888; Errors</a>
-    <a href="#" onclick="showTab('settings')">&#9881; Settings</a>
+    <a href="#" class="active" onclick="showTab('overview',this)">&#9673; Overview</a>
+    <a href="#" onclick="showTab('keys',this)">&#9881; API Keys</a>
+    <a href="#" onclick="showTab('wallet',this)">&#9883; Wallet</a>
+    <a href="#" onclick="showTab('models',this)">&#9881; Models</a>
+    <a href="#" onclick="showTab('usage',this)">&#9879; Usage</a>
+    <a href="#" onclick="showTab('errors',this)">&#9888; Errors</a>
+    <a href="#" onclick="showTab('settings',this)">&#9881; Settings</a>
   </nav>
   <div class="user-box">
     <div class="uname" id="user-display">—</div>
@@ -592,21 +593,23 @@ th{color:var(--dim);font-size:11px;text-transform:uppercase;font-weight:600}
 
 <script>
 let data={};
-const models=['qwen3.5:4b','qwen2.5:7b','deepseek-r1:8b','qwen2.5-coder:7b','qwen3.5:9b','qwen2.5:14b'];
+const models=['qwen3.5:4b','qwen2.5:7b','deepseek-r1:8b','qwen2.5-coder:7b','qwen3.5:9b','qwen2.5:14b','qwen3.6:27b'];
 const modelInfo={
   'qwen3.5:4b':{size:'3 GB',price:'20 sats/M'},
   'qwen2.5:7b':{size:'5 GB',price:'30 sats/M'},
   'deepseek-r1:8b':{size:'5 GB',price:'30 sats/M'},
   'qwen2.5-coder:7b':{size:'5 GB',price:'30 sats/M'},
   'qwen3.5:9b':{size:'7 GB',price:'40 sats/M'},
-  'qwen2.5:14b':{size:'10 GB',price:'50 sats/M'}
+  'qwen2.5:14b':{size:'10 GB',price:'50 sats/M'},
+  'qwen3.6:27b':{size:'17 GB',price:'80 sats/M'}
 };
 
-function showTab(name){
+function showTab(name,el){
   document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
   document.getElementById('tab-'+name).style.display='';
   document.querySelectorAll('.sidebar nav a').forEach(a=>a.classList.remove('active'));
-  event.target.classList.add('active');
+  if(el)el.classList.add('active');
+  else document.querySelector('.sidebar nav a[onclick*="'+name+'"]').classList.add('active');
 }
 
 async function load(){
