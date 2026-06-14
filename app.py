@@ -505,12 +505,86 @@ async def owlrun_dashboard():
         return HTMLResponse(content=html_path.read_text())
     return HTMLResponse(content="<h1>Owlrun dashboard not found</h1>", status_code=404)
 
+def get_setting(key, default=""):
+    with get_db() as db:
+        row = db.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        return row["value"] if row else default
+
+def set_setting(key, value):
+    with get_db() as db:
+        db.execute("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))", (key, str(value)))
+
+def get_gpu_info():
+    """Get GPU info via nvidia-smi."""
+    import subprocess
+    try:
+        out = subprocess.check_output([
+            "nvidia-smi", "--query-gpu=name,memory.total,memory.used,memory.free,temperature.gpu,power.draw,utilization.gpu",
+            "--format=csv,noheader,nounits"
+        ], timeout=5, text=True).strip().split(", ")
+        return {
+            "name": out[0],
+            "vendor": "NVIDIA",
+            "vram_total_mb": int(out[1]),
+            "vram_used_mb": int(out[2]),
+            "vram_free_mb": int(out[3]),
+            "temp_c": int(out[4]),
+            "power_w": float(out[5]),
+            "util_pct": int(out[6]),
+            "vram_exact": True
+        }
+    except:
+        return {"name": "Unknown GPU", "vendor": "unknown", "vram_total_mb": 0, "vram_free_mb": 0, "temp_c": 0, "power_w": 0, "util_pct": 0, "vram_exact": False}
+
+def get_disk_info():
+    import shutil
+    try:
+        usage = shutil.disk_usage("/")
+        return {
+            "path": "/",
+            "total_gb": round(usage.total / (1024**3), 1),
+            "free_gb": round(usage.free / (1024**3), 1),
+            "free_pct": round(usage.free / usage.total * 100, 1)
+        }
+    except:
+        return {"path": "/", "total_gb": 0, "free_gb": 0, "free_pct": 0}
+
+def get_earnings_data():
+    """Get real earnings from gateway.db."""
+    gateway_db = "/home/y/payout-gateway/gateway.db"
+    try:
+        conn = sqlite3.connect(gateway_db)
+        conn.row_factory = sqlite3.Row
+        # Total earned
+        total = conn.execute("SELECT COALESCE(SUM(cost_sats),0) as sats FROM transactions").fetchone()["sats"]
+        # Today
+        today = conn.execute("SELECT COALESCE(SUM(cost_sats),0) as sats FROM transactions WHERE date(created_at)=date('now')").fetchone()["sats"]
+        # Pending
+        pending = conn.execute("SELECT COALESCE(SUM(cost_sats),0) as sats FROM transactions WHERE settled=0").fetchone()["sats"]
+        # Withdrawn
+        withdrawn = conn.execute("SELECT COALESCE(SUM(amount_sats),0) as sats FROM payouts WHERE status='settled'").fetchone()["sats"]
+        # Today tokens
+        tokens_today = conn.execute("SELECT COALESCE(SUM(tokens_in+tokens_out),0) as t FROM usage_log WHERE date(created_at)=date('now')").fetchone()["t"]
+        # Today requests
+        jobs_today = conn.execute("SELECT COUNT(*) as c FROM usage_log WHERE date(created_at)=date('now')").fetchone()["c"]
+        # Payout history
+        payouts = conn.execute("SELECT amount_sats, created_at FROM payouts ORDER BY id DESC LIMIT 10").fetchall()
+        conn.close()
+        return {
+            "total_sats": total,
+            "today_sats": today,
+            "pending_sats": pending,
+            "withdrawn_sats": withdrawn,
+            "tokens_today": tokens_today,
+            "jobs_today": jobs_today,
+            "payouts": [dict(p) for p in payouts]
+        }
+    except:
+        return {"total_sats": 0, "today_sats": 0, "pending_sats": 0, "withdrawn_sats": 0, "tokens_today": 0, "jobs_today": 0, "payouts": []}
+
 @app.get("/api/status")
 async def owlrun_status(request: Request):
-    """Owlrun-compatible status endpoint."""
-    user = get_user(request)
-    username = user["username"] if user else "guest"
-    
+    """Owlrun-compatible status endpoint with real data."""
     # Get Ollama models
     models = []
     try:
@@ -518,115 +592,171 @@ async def owlrun_status(request: Request):
         models = [m["name"] for m in resp.json().get("models", [])]
     except:
         pass
-    
+
+    gpu = get_gpu_info()
+    disk = get_disk_info()
+    earnings = get_earnings_data()
+    threshold = int(get_setting("redeem_threshold", "100"))
+    job_mode = get_setting("job_mode", "always")
+    keep_warm = get_setting("keep_warm", "true") == "true"
+    ctx_len = int(get_setting("context_length", "8192"))
+    free_tier = int(get_setting("free_tier_pct", "0"))
+    btc_price = 105000  # hardcoded for now
+
     return {
         "node_id": "voltai-local",
-        "provider_key": "local",
-        "version": "0.1.0-voltai",
-        "network": "local",
+        "provider_key": "voltai",
+        "version": "1.0.0-voltai",
+        "network": "production",
         "state": "earning",
-        "job_mode": "always",
+        "job_mode": job_mode,
         "wallet": {
             "address": LN_ADDRESS,
-            "configured": True,
             "configured": "Lightning payouts active"
         },
-        "gpu": {
-            "name": "Local GPU",
-            "vendor": "unknown",
-            "vram_total_mb": 0,
-            "util_pct": 0,
-            "vram_free_mb": 0,
-            "temp_c": 0,
-            "power_w": 0,
-            "vram_exact": False
-        },
-        "model": models[0] if models else "none",
+        "gpu": gpu,
+        "model": get_setting("active_model", "qwen2.5:14b"),
         "models": models,
         "model_pricing": {"per_m_input_usd": 0, "per_m_output_usd": 0},
         "all_model_pricing": {},
-        "earnings": {"today_usd": 0, "total_usd": 0},
+        "earnings": {"today_usd": earnings["today_sats"] * btc_price / 100_000_000, "total_usd": earnings["total_sats"] * btc_price / 100_000_000},
         "gateway": {
             "connected": True,
             "status": "voltai",
-            "jobs_today": 0,
-            "tokens_today": 0,
-            "earned_today_usd": 0,
-            "earned_today_sats": 0,
-            "earned_total_sats": 0,
+            "jobs_today": earnings["jobs_today"],
+            "tokens_today": earnings["tokens_today"],
+            "earned_today_usd": earnings["today_sats"] * btc_price / 100_000_000,
+            "earned_today_sats": earnings["today_sats"] * 1000,
+            "earned_total_sats": earnings["total_sats"] * 1000,
             "queue_depth_global": 0
         },
-        "disk": {"path": "/", "total_gb": 0, "free_gb": 0, "free_pct": 0},
-        "available_models": [{"tag": m, "vram_gb": 0, "installed": True, "active": True, "fits": True} for m in models],
+        "disk": disk,
+        "available_models": [{"tag": m, "vram_gb": 0, "installed": True, "active": m == get_setting("active_model", "qwen2.5:14b"), "fits": True} for m in models],
         "pulling": False,
-        "context_length": 8192,
-        "keep_warm": True,
-        "free_tier_pct": 0,
+        "context_length": ctx_len,
+        "keep_warm": keep_warm,
+        "free_tier_pct": free_tier,
         "karma_score": 0,
         "karma_tier": "",
         "free_tier_jobs": 0,
         "lightning_address": LN_ADDRESS,
-        "redeem_threshold": 100,
-        "btc_price": {"live_usd": 0, "yesterday_fix": 0, "daily_avg": 0, "weekly_avg": 0, "status": "local"},
-        "broadcasts": [],
-        "sats_wallet": {"gateway_sats": 0, "local_sats": 0, "total_sats": 0, "usd_approx": 0, "proof_count": 0, "last_claim": "", "last_token": "", "token_history": [], "withdraw_history": []}
+        "redeem_threshold": threshold,
+        "btc_price": {"live_usd": btc_price, "yesterday_fix": btc_price, "daily_avg": btc_price, "weekly_avg": btc_price, "status": "local"},
+        "broadcasts": [{"title": "VoltAI Gateway", "message": "Earnings auto-sent to your Lightning wallet. No action needed.", "severity": "info", "timestamp": "now"}],
+        "sats_wallet": {
+            "gateway_sats": earnings["pending_sats"] * 1000,
+            "local_sats": 0,
+            "total_sats": earnings["pending_sats"] * 1000,
+            "usd_approx": earnings["pending_sats"] * btc_price / 100_000_000,
+            "proof_count": 0,
+            "last_claim": "",
+            "last_token": "",
+            "token_history": [],
+            "withdraw_history": [{"amount_sats": p["amount_sats"], "payment_hash": "", "timestamp": p["created_at"]} for p in earnings["payouts"]]
+        }
     }
 
 @app.get("/api/history")
 async def owlrun_history(period: str = "24h"):
-    """Owlrun-compatible history endpoint."""
-    return {"period": period, "buckets": []}
+    """Real usage history from usage_log."""
+    with get_db() as db:
+        rows = db.execute(
+            """SELECT date(created_at) as date, SUM(tokens_in+tokens_out) as tokens, 
+                      SUM(cost_sats) as sats, COUNT(*) as requests
+               FROM usage_log WHERE created_at>=datetime('now','-7 days')
+               GROUP BY date(created_at) ORDER BY date"""
+        ).fetchall()
+    return {"period": period, "buckets": [dict(r) for r in rows]}
 
 @app.post("/api/claim-ecash")
 async def owlrun_claim():
-    """Owlrun-compatible claim endpoint (not supported)."""
     return {"error": "ecash claims handled by VoltAI gateway"}
 
 @app.post("/api/set-lightning-address")
 async def owlrun_set_ln(request: Request):
-    """Owlrun-compatible set address endpoint."""
     data = await request.json()
-    return {"status": "ok", "address": data.get("address", LN_ADDRESS)}
+    addr = data.get("address", LN_ADDRESS)
+    set_setting("lightning_address", addr)
+    return {"status": "ok", "address": addr}
 
 @app.post("/api/set-redeem-threshold")
 async def owlrun_set_threshold(request: Request):
-    return {"status": "ok", "threshold": 100}
+    data = await request.json()
+    threshold = data.get("threshold", 100)
+    set_setting("redeem_threshold", threshold)
+    return {"status": "ok", "threshold": threshold}
 
 @app.post("/api/switch-model")
 async def owlrun_switch_model(request: Request):
-    return {"status": "ok", "model": "managed by VoltAI"}
+    data = await request.json()
+    model = data.get("model", "")
+    set_setting("active_model", model)
+    return {"status": "ok", "model": model}
 
 @app.post("/api/pull-model")
 async def owlrun_pull_model(request: Request):
     from fastapi.responses import StreamingResponse
+    data = await request.json()
+    model = data.get("model", "")
     async def gen():
-        yield 'data: {"status":"managed by VoltAI"}\n\n'
-        yield 'data: {"status":"done"}\n\n'
+        try:
+            import subprocess
+            proc = subprocess.Popen(["ollama", "pull", model], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in proc.stdout:
+                yield f'data: {{"status":"pulling {model}"}}\n\n'
+            proc.wait()
+            yield f'data: {{"status":"done"}}\n\n'
+        except:
+            yield f'data: {{"status":"error pulling model"}}\n\n'
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 @app.post("/api/remove-model")
 async def owlrun_remove_model(request: Request):
-    return {"status": "ok", "model": "managed by VoltAI"}
+    data = await request.json()
+    model = data.get("model", "")
+    import subprocess
+    try:
+        subprocess.run(["ollama", "rm", model], timeout=30)
+        return {"status": "ok", "model": model}
+    except:
+        return {"error": "failed to remove model"}
 
 @app.post("/api/set-job-mode")
 async def owlrun_set_job_mode(request: Request):
-    return {"status": "ok", "mode": "always"}
+    data = await request.json()
+    mode = data.get("mode", "always")
+    set_setting("job_mode", mode)
+    return {"status": "ok", "mode": mode}
 
 @app.post("/api/set-context-length")
 async def owlrun_set_ctx(request: Request):
-    return {"status": "ok", "context_length": 8192}
+    data = await request.json()
+    ctx = data.get("context_length", 8192)
+    set_setting("context_length", ctx)
+    return {"status": "ok", "context_length": ctx}
 
 @app.post("/api/set-free-tier")
 async def owlrun_set_free_tier(request: Request):
-    return {"status": "ok", "free_tier_pct": 0}
+    data = await request.json()
+    pct = data.get("pct", 0)
+    set_setting("free_tier_pct", pct)
+    return {"status": "ok", "free_tier_pct": pct}
 
 @app.post("/api/set-keep-warm")
 async def owlrun_set_keep_warm(request: Request):
-    return {"status": "ok", "keep_warm": True}
+    data = await request.json()
+    on = data.get("on", True)
+    set_setting("keep_warm", str(on).lower())
+    return {"status": "ok", "keep_warm": on}
 
 @app.get("/api/model-size")
 async def owlrun_model_size(model: str = ""):
-    return {"model": model, "size_mb": 0, "source": "estimate"}
+    # Estimate from model name
+    size_map = {"3b": 2000, "7b": 4500, "8b": 5000, "9b": 6000, "14b": 9000, "27b": 16000, "70b": 40000}
+    for key, mb in size_map.items():
+        if key in model.lower():
+            return {"model": model, "size_mb": mb, "source": "estimate"}
+    return {"model": model, "size_mb": 4000, "source": "estimate"}
 
 # ─── Start ───────────────────────────────────────────────────────────
 if __name__ == "__main__":

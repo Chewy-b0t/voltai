@@ -87,6 +87,11 @@ def init_db():
                 ip_address  TEXT,
                 created_at  TEXT DEFAULT (datetime('now'))
             );
+            CREATE TABLE IF NOT EXISTS settings (
+                key         TEXT PRIMARY KEY,
+                value       TEXT NOT NULL,
+                updated_at  TEXT DEFAULT (datetime('now'))
+            );
             CREATE INDEX IF NOT EXISTS idx_err_time ON error_log(created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_err_user ON error_log(user_id);
         """)
