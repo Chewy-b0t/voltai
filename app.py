@@ -601,7 +601,23 @@ async def owlrun_status(request: Request):
     keep_warm = get_setting("keep_warm", "true") == "true"
     ctx_len = int(get_setting("context_length", "8192"))
     free_tier = int(get_setting("free_tier_pct", "0"))
-    btc_price = 105000  # hardcoded for now
+    
+    # Fetch live BTC price (cached for 60s)
+    btc_price = get_setting("btc_price_cache", "64000")
+    btc_updated = get_setting("btc_price_updated", "0")
+    import time
+    try:
+        if time.time() - float(btc_updated) > 60:
+            import urllib.request
+            req = urllib.request.Request('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', headers={'User-Agent': 'VoltAI/1.0'})
+            resp = urllib.request.urlopen(req, timeout=5)
+            data = json.loads(resp.read())
+            btc_price = str(data['bitcoin']['usd'])
+            set_setting("btc_price_cache", btc_price)
+            set_setting("btc_price_updated", str(time.time()))
+    except:
+        pass
+    btc_price = float(btc_price)
 
     return {
         "node_id": "voltai-local",
