@@ -603,21 +603,37 @@ async def owlrun_status(request: Request):
     free_tier = int(get_setting("free_tier_pct", "0"))
     
     # Fetch live BTC price (cached for 60s)
-    btc_price = get_setting("btc_price_cache", "64000")
+    btc_data = json.loads(get_setting("btc_price_cache", '{"live":64000,"yesterday":64000,"avg24h":64000,"avg7d":64000}'))
     btc_updated = get_setting("btc_price_updated", "0")
     import time
     try:
         if time.time() - float(btc_updated) > 60:
             import urllib.request
-            req = urllib.request.Request('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', headers={'User-Agent': 'VoltAI/1.0'})
+            # Fetch current price
+            req = urllib.request.Request('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_vol=true', headers={'User-Agent': 'VoltAI/1.0'})
             resp = urllib.request.urlopen(req, timeout=5)
             data = json.loads(resp.read())
-            btc_price = str(data['bitcoin']['usd'])
-            set_setting("btc_price_cache", btc_price)
+            live = data['bitcoin']['usd']
+            
+            # Fetch 24h and 7d history for averages
+            req2 = urllib.request.Request('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7', headers={'User-Agent': 'VoltAI/1.0'})
+            resp2 = urllib.request.urlopen(req2, timeout=5)
+            chart = json.loads(resp2.read())
+            prices = [p[1] for p in chart.get('prices', [])]
+            
+            if len(prices) > 0:
+                yesterday = prices[-24] if len(prices) >= 24 else prices[0]
+                avg24h = sum(prices[-24:]) / min(24, len(prices))
+                avg7d = sum(prices) / len(prices)
+            else:
+                yesterday = avg24h = avg7d = live
+            
+            btc_data = {"live": live, "yesterday": round(yesterday), "avg24h": round(avg24h), "avg7d": round(avg7d)}
+            set_setting("btc_price_cache", json.dumps(btc_data))
             set_setting("btc_price_updated", str(time.time()))
-    except:
+    except Exception as e:
         pass
-    btc_price = float(btc_price)
+    btc_price = btc_data["live"]
 
     return {
         "node_id": "voltai-local",
@@ -657,7 +673,7 @@ async def owlrun_status(request: Request):
         "free_tier_jobs": 0,
         "lightning_address": LN_ADDRESS,
         "redeem_threshold": threshold,
-        "btc_price": {"live_usd": btc_price, "yesterday_fix": btc_price, "daily_avg": btc_price, "weekly_avg": btc_price, "status": "local"},
+        "btc_price": {"live_usd": btc_data["live"], "yesterday_fix": btc_data["yesterday"], "daily_avg": btc_data["avg24h"], "weekly_avg": btc_data["avg7d"], "status": "live"},
         "broadcasts": [{"title": "VoltAI Gateway", "message": "Earnings auto-sent to your Lightning wallet. No action needed.", "severity": "info", "timestamp": "now"}],
         "sats_wallet": {
             "gateway_sats": earnings["pending_sats"] * 1000,
