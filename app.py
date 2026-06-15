@@ -12,7 +12,7 @@ from datetime import datetime
 
 import httpx
 from fastapi import FastAPI, Request, HTTPException, Response, Cookie
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 import uvicorn
 
 from db import (init_db, get_db, hash_pass, check_pass, hash_key,
@@ -424,7 +424,24 @@ async def ollama_proxy(path: str, request: Request):
     headers = {k:v for k,v in request.headers.items() if k.lower() not in ("host","authorization")}
     
     try:
-        resp = await client.request(request.method, target, content=body, headers=headers)
+        # Check if client wants streaming
+        wants_stream = data.get("stream", True) if body else True
+        
+        if wants_stream:
+            # Stream response directly
+            req = client.build_request(request.method, target, content=body, headers=headers)
+            resp = await client.send(req, stream=True)
+            
+            async def stream_gen():
+                total_tokens = 0
+                async for chunk in resp.aiter_bytes():
+                    yield chunk
+                await resp.aclose()
+            
+            return StreamingResponse(stream_gen(), media_type="text/event-stream",
+                                   headers={"Cache-Control":"no-cache","X-Accel-Buffering":"no"})
+        else:
+            resp = await client.request(request.method, target, content=body, headers=headers)
     except httpx.ConnectError:
         log_error(user_id=key["user_id"], api_key_id=key["id"],
                   endpoint=f"/v1/{path}", method=request.method, status_code=502,
@@ -433,17 +450,12 @@ async def ollama_proxy(path: str, request: Request):
         raise HTTPException(502, "Ollama not running")
     except Exception as e:
         log_error(user_id=key["user_id"], api_key_id=key["id"],
-                  endpoint=f"/v1/{path}", method=request.method, status_code=502,
+                  endpoint=f"/v1/{path}", method=request.method, status_code=500,
                   error_type="proxy", error_msg=str(e)[:200],
                   ip=request.client.host if request.client else None)
-        raise HTTPException(502, f"Proxy error: {e}")
+        raise HTTPException(500, f"Proxy error: {e}")
     
-    # Streaming
-    if "text/event-stream" in resp.headers.get("content-type",""):
-        return Response(content=resp.content, status_code=resp.status_code,
-                       media_type="text/event-stream",
-                       headers={"Cache-Control":"no-cache","X-Accel-Buffering":"no"})
-    
+    # Non-streaming response
     # Log non-200 Ollama responses
     if resp.status_code != 200:
         try:
