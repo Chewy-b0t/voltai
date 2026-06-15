@@ -694,7 +694,7 @@ async def owlrun_status(request: Request):
         "keep_warm": keep_warm,
         "free_tier_pct": free_tier,
         "karma_score": earnings.get("jobs_today", 0) + earnings.get("total_sats", 0) // 10,
-        "karma_tier": "active" if earnings.get("jobs_today", 0) > 0 else "new",
+        "karma_tier": "diamond" if (earnings.get("jobs_today", 0) + earnings.get("total_sats", 0) // 10) >= 100 else "gold" if (earnings.get("jobs_today", 0) + earnings.get("total_sats", 0) // 10) >= 50 else "silver" if (earnings.get("jobs_today", 0) + earnings.get("total_sats", 0) // 10) >= 10 else "bronze" if (earnings.get("jobs_today", 0) + earnings.get("total_sats", 0) // 10) > 0 else "none",
         "free_tier_jobs": earnings.get("jobs_today", 0) if free_tier > 0 else 0,
         "lightning_address": LN_ADDRESS,
         "redeem_threshold": threshold,
