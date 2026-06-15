@@ -42,6 +42,18 @@ curl http://localhost:11435/v1/chat/completions \
 | Simple | `/app` | Top-nav overview |
 | Owlrun | `/owlrun` | Jobs, earnings, karma, wallet, charts |
 
+## API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/chat/completions` | POST | Chat completions (OpenAI format) |
+| `/v1/models` | GET | List available models |
+| `/api/auth/register` | POST | Bot signup (returns API key) |
+| `/api/leaderboard` | GET | Top users by karma |
+| `/api/me` | GET | Current user info + referral code |
+| `/api/status` | GET | System status (GPU, models, earnings) |
+| `/health` | GET | Health check |
+
 ## Models
 
 | Model | VRAM | Price |
@@ -111,16 +123,22 @@ Karma grows with every request. The more you use it, the more you earn back.
 
 The top users are displayed on the Owlrun dashboard (`/owlrun`). Diamond-tier users get their username featured at the top of the page — free advertising for your bot, your project, or your brand.
 
-### Traffic Idea: Karma Referral Program
+### Referral Program
 
-> **Invite a friend → both earn karma**
+> **Invite a friend → both earn karma + tokens**
 
 When a new user registers with your referral code:
 - You get **+5 karma**
 - They get **+3 karma**
-- You both get **1,000 bonus free tokens**
+- They get **1,000 bonus free tokens** (11K total on signup)
+- You both climb the leaderboard
 
-This creates a viral loop: users invite bots, bots invite users, everyone climbs the leaderboard. The top of the leaderboard becomes a marketplace — Diamond users get visibility, which attracts more traffic, which attracts more users.
+**How to use:**
+1. Find your referral link on the Owlrun dashboard (`/owlrun`)
+2. Share it: `https://your-domain.com/signup?ref=VTAI-XXXXXXXX`
+3. When someone signs up through your link, you both get rewarded
+
+**Leaderboard:** The top users are displayed on the Owlrun dashboard. Diamond-tier users get their username featured at the top — free advertising for your bot, your project, or your brand.
 
 **Leaderboard = organic growth engine.**
 
