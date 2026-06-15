@@ -784,8 +784,11 @@ function update(d) {
     document.getElementById('wallet-today-sats').textContent = fmtSats(sw.gateway_sats);
     document.getElementById('wallet-withdrawn').textContent = fmtSats(sw.local_sats);
     if (sw.gateway_sats > 0 && thr > 0) {
-      var pct = Math.min(100, Math.round(sw.gateway_sats / thr * 100));
-      document.getElementById('wallet-next-payout').textContent = pct + '% to threshold (' + Math.round(thr/1000) + ' sats)';
+      var pendingMsats = sw.gateway_sats;
+      var thresholdMsats = thr * 1000;
+      var pct = Math.min(100, Math.round(pendingMsats / thresholdMsats * 100));
+      var remaining = Math.max(0, Math.round((thresholdMsats - pendingMsats) / 1000));
+      document.getElementById('wallet-next-payout').textContent = pct + '% to threshold (' + remaining + ' sats to go)';
     } else {
       document.getElementById('wallet-next-payout').textContent = '—';
     }
