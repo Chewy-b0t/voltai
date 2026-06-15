@@ -514,6 +514,44 @@ button:hover{opacity:.9}
   </div>
 </div>
 
+<!-- GPU Fund -->
+<div style="max-width:1400px;margin:0 auto;padding:0 28px 24px">
+  <div class="card" style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1008 100%);border-color:var(--orange-dark)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div class="card-title" style="margin-bottom:4px">🎯 GPU Fund — RTX PRO 6000 Blackwell</div>
+        <div style="font-size:12px;color:var(--text-dim)">96 GB GDDR7 • Run 70B+ models locally</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:24px;font-weight:800;color:var(--orange)" id="gpu-raised">0 sats</div>
+        <div style="font-size:12px;color:var(--text-dim)">of <span id="gpu-goal">1M sats</span></div>
+      </div>
+    </div>
+    <div style="background:var(--bar-bg);border-radius:6px;height:12px;margin-bottom:10px;overflow:hidden">
+      <div id="gpu-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--orange-dark),var(--orange),var(--orange-light));width:0%;transition:width 1s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--text-dim)"><span id="gpu-percent">0</span>% funded • <span id="gpu-donors">0</span> donors • ~$<span id="gpu-usd">0</span></div>
+      <div style="font-size:11px;color:var(--text-muted)">BTC: $<span id="gpu-btc">65,000</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button onclick="donateGpu(1000)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">⚡ 1K sats</button>
+      <button onclick="donateGpu(5000)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">⚡ 5K sats</button>
+      <button onclick="donateGpu(10000)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">⚡ 10K sats</button>
+      <button onclick="donateGpuCustom()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange);background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#000;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">Custom</button>
+    </div>
+    <div id="gpu-donate-msg" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--text);margin-bottom:8px" id="gpu-invoice-status">Scan QR or copy invoice below</div>
+      <div style="background:var(--bg-card-hover);border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:var(--orange);word-break:break-all;max-height:60px;overflow-y:auto" id="gpu-invoice"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="copyInvoice('gpu-invoice')" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:12px;cursor:pointer">Copy Invoice</button>
+        <button onclick="checkGpuPayment()" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-size:12px;cursor:pointer">Check Payment</button>
+      </div>
+    </div>
+    <div id="gpu-recent" style="max-height:100px;overflow-y:auto"></div>
+  </div>
+</div>
+
 <div class="charts-section" id="charts-section" style="display:none">
   <div class="tab-bar" id="period-tabs">
     <button data-period="24h" class="active">24h</button>
@@ -1024,6 +1062,7 @@ async function poll() {
   fetchHistory();
   loadLeaderboard();
   loadReferral();
+  loadGpuFund();
 }
 
 // ── Leaderboard ──────────────────────────────────────────────────────
@@ -1077,6 +1116,90 @@ function copyReferral() {
   const btn = el.nextElementSibling;
   btn.textContent = 'Copied!';
   setTimeout(() => btn.textContent = 'Copy', 2000);
+}
+
+// ── GPU Fund ──────────────────────────────────────────────────────────
+var gpuInvoiceHash = null;
+
+async function loadGpuFund() {
+  try {
+    const r = await fetch('http://127.0.0.1:11440/api/gpu-fund');
+    const d = await r.json();
+    document.getElementById('gpu-raised').textContent = formatSats(d.raised_sats);
+    document.getElementById('gpu-goal').textContent = formatSats(d.goal_sats);
+    document.getElementById('gpu-percent').textContent = d.percent;
+    document.getElementById('gpu-donors').textContent = d.donors;
+    document.getElementById('gpu-usd').textContent = d.raised_usd.toFixed(2);
+    document.getElementById('gpu-btc').textContent = d.btc_price.toLocaleString();
+    document.getElementById('gpu-bar').style.width = Math.min(d.percent, 100) + '%';
+    
+    // Recent donors
+    const el = document.getElementById('gpu-recent');
+    if (d.recent_donors && d.recent_donors.length > 0) {
+      let html = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Recent Donors</div>';
+      for (const donor of d.recent_donors) {
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
+          <span style="color:var(--text)">${donor.name}</span>
+          <span style="color:var(--orange);font-weight:600">${formatSats(donor.sats)}</span>
+        </div>`;
+      }
+      el.innerHTML = html;
+    }
+  } catch(e) {}
+}
+
+function formatSats(sats) {
+  if (sats >= 1000000) return (sats / 1000000).toFixed(1) + 'M';
+  if (sats >= 1000) return (sats / 1000).toFixed(1) + 'K';
+  return sats.toString();
+}
+
+async function donateGpu(amount) {
+  const name = prompt('Your name (optional):') || 'Anonymous';
+  const msg = prompt('Message (optional):') || '';
+  
+  try {
+    const r = await fetch('http://127.0.0.1:11440/api/gpu-fund/donate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({amount_sats: amount, name: name, message: msg})
+    });
+    const d = await r.json();
+    if (d.invoice) {
+      gpuInvoiceHash = d.payment_hash;
+      document.getElementById('gpu-invoice').textContent = d.invoice;
+      document.getElementById('gpu-donate-msg').style.display = 'block';
+      document.getElementById('gpu-invoice-status').textContent = `Scan QR or copy invoice — ${amount} sats`;
+    }
+  } catch(e) {
+    alert('Failed to create invoice. Is the gateway running?');
+  }
+}
+
+function donateGpuCustom() {
+  const amount = prompt('Enter amount in sats:');
+  if (amount && parseInt(amount) > 0) donateGpu(parseInt(amount));
+}
+
+async function checkGpuPayment() {
+  if (!gpuInvoiceHash) return;
+  try {
+    const r = await fetch(`http://127.0.0.1:11440/api/gpu-fund/verify/${gpuInvoiceHash}`);
+    const d = await r.json();
+    if (d.status === 'paid') {
+      document.getElementById('gpu-invoice-status').textContent = '✅ Payment received! Thank you!';
+      document.getElementById('gpu-invoice-status').style.color = '#22c55e';
+      gpuInvoiceHash = null;
+      loadGpuFund();
+    } else {
+      document.getElementById('gpu-invoice-status').textContent = '⏳ Waiting for payment...';
+    }
+  } catch(e) {}
+}
+
+function copyInvoice(elId) {
+  const el = document.getElementById(elId);
+  navigator.clipboard.writeText(el.textContent);
 }
 
 // ── Charts ──────────────────────────────────────────────────────────
