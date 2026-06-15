@@ -555,6 +555,17 @@ async def ollama_proxy(path: str, request: Request):
                 )
                 # Award karma: +1 per request
                 db.execute("UPDATE users SET karma = karma + 1 WHERE id=?", (key["user_id"],))
+            # Log to gateway DB for unified dashboard
+            try:
+                gconn = sqlite3.connect("/home/y/payout-gateway/gateway.db")
+                gconn.execute(
+                    "INSERT INTO transactions (api_key_id, model, tokens_in, tokens_out, cost_sats, source) VALUES (?, ?, ?, ?, ?, ?)",
+                    (1, rd.get("model","?"), rd.get("prompt_eval_count",0), rd.get("eval_count",0), actual_cost, "owlrun")
+                )
+                gconn.commit()
+                gconn.close()
+            except Exception:
+                pass
             # qwen3.5 fix: if content is empty but reasoning exists, use it
             choices = rd.get("choices", [])
             msg = choices[0].get("message", {}) if choices else {}
