@@ -394,11 +394,12 @@ async def ollama_proxy(path: str, request: Request):
     # Map OpenAI paths to Ollama paths
     ollama_path = path
     if path.startswith("chat/completions"):
-        ollama_path = "api/chat"
+        # Use Ollama's own OpenAI-compatible endpoint for proper format
+        ollama_path = "v1/chat/completions"
     elif path.startswith("completions"):
-        ollama_path = "api/generate"
+        ollama_path = "v1/completions"
     elif path == "models":
-        ollama_path = "api/tags"
+        ollama_path = "v1/models"
     
     # Estimate tokens
     is_chat = False
@@ -485,6 +486,13 @@ async def ollama_proxy(path: str, request: Request):
                     (key["user_id"], key["id"], rd.get("model","?"),
                      rd.get("prompt_eval_count",0), rd.get("eval_count",0), actual_cost)
                 )
+            # qwen3.5 fix: if content is empty but reasoning exists, use it
+            choices = rd.get("choices", [])
+            msg = choices[0].get("message", {}) if choices else {}
+            if not msg.get("content") and msg.get("reasoning"):
+                rd["choices"][0]["message"]["content"] = msg["reasoning"]
+                return Response(content=json.dumps(rd).encode(),
+                    status_code=200, media_type="application/json")
         except Exception:
             pass
     
