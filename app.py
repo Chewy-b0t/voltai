@@ -21,6 +21,7 @@ from templates import LANDING_HTML, LOGIN_HTML, SIGNUP_HTML, APP_HTML
 
 # ─── Config ──────────────────────────────────────────────────────────
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://127.0.0.1:11440")
 PORT = int(os.environ.get("PORT", "11435"))
 HOST = os.environ.get("HOST", "0.0.0.0")
 BASE_URL = os.environ.get("BASE_URL", f"http://127.0.0.1:{PORT}")
@@ -421,7 +422,7 @@ async def ollama_proxy(path: str, request: Request):
     
     # Forward to Ollama
     target = f"{OLLAMA_URL}/{ollama_path}"
-    headers = {k:v for k,v in request.headers.items() if k.lower() not in ("host","authorization")}
+    headers = {k:v for k,v in request.headers.items() if k.lower() not in ("host","authorization","content-length","content-type")}
     
     try:
         # Check if client wants streaming
@@ -728,6 +729,12 @@ async def owlrun_set_threshold(request: Request):
     data = await request.json()
     threshold = data.get("threshold", 100)
     set_setting("redeem_threshold", threshold)
+    # Also update gateway's min payout
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(f"{GATEWAY_URL}/api/set-min-payout", json={"min_payout_sats": threshold}, timeout=5.0)
+    except Exception:
+        pass
     return {"status": "ok", "threshold": threshold}
 
 @app.post("/api/switch-model")
