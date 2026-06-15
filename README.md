@@ -94,6 +94,36 @@ Your earnings sync with the [Automatic Payouts Gateway](https://github.com/Chewy
 | Free tier | 10,000 tokens per key |
 | Rate limit | 60 req/min, 500K tokens/min |
 
+## Karma Tiers
+
+Every user earns karma by using the API. Higher tiers unlock perks.
+
+| Tier | Score | Perk |
+|------|-------|------|
+| **Bronze** | 1–9 | 5% free tier bonus |
+| **Silver** | 10–49 | 10% free tier bonus |
+| **Gold** | 50–99 | 20% free tier bonus + priority |
+| **Diamond** | 100+ | 30% free tier bonus + featured on leaderboard |
+
+Karma grows with every request. The more you use it, the more you earn back.
+
+### Leaderboard
+
+The top users are displayed on the Owlrun dashboard (`/owlrun`). Diamond-tier users get their username featured at the top of the page — free advertising for your bot, your project, or your brand.
+
+### Traffic Idea: Karma Referral Program
+
+> **Invite a friend → both earn karma**
+
+When a new user registers with your referral code:
+- You get **+5 karma**
+- They get **+3 karma**
+- You both get **1,000 bonus free tokens**
+
+This creates a viral loop: users invite bots, bots invite users, everyone climbs the leaderboard. The top of the leaderboard becomes a marketplace — Diamond users get visibility, which attracts more traffic, which attracts more users.
+
+**Leaderboard = organic growth engine.**
+
 ## License
 
 MIT
