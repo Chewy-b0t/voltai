@@ -16,7 +16,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Stre
 import uvicorn
 
 from db import (init_db, get_db, hash_pass, check_pass, hash_key,
-                generate_key, sats_for_tokens, tokens_for_sats)
+                generate_key, generate_referral_code, karma_tier,
+                sats_for_tokens, tokens_for_sats)
 from templates import LANDING_HTML, LOGIN_HTML, SIGNUP_HTML, APP_HTML
 
 # ─── Config ──────────────────────────────────────────────────────────
@@ -78,6 +79,7 @@ async def signup(request: Request):
     username = data.get("username", "").strip()
     password = data.get("password", "")
     email = data.get("email", "").strip() or None
+    ref_code = data.get("ref", "").strip() or None
     
     if not username or len(username) < 3:
         raise HTTPException(400, "Username must be at least 3 characters")
@@ -89,18 +91,34 @@ async def signup(request: Request):
         if existing:
             raise HTTPException(400, "Username already taken")
         
+        # Resolve referral
+        referred_by = None
+        if ref_code:
+            referrer = db.execute("SELECT id FROM users WHERE referral_code=?", (ref_code,)).fetchone()
+            if referrer:
+                referred_by = referrer["id"]
+        
+        my_ref_code = generate_referral_code()
         db.execute(
-            "INSERT INTO users (email, username, pass_hash) VALUES (?, ?, ?)",
-            (email, username, hash_pass(password))
+            "INSERT INTO users (email, username, pass_hash, referral_code, referred_by) VALUES (?, ?, ?, ?, ?)",
+            (email, username, hash_pass(password), my_ref_code, referred_by)
         )
         user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
         
-        # Create default API key with free credits
+        # Create default API key with free credits + referral bonus
+        free = FREE_TOKENS
+        if referred_by:
+            free += 1000  # referral bonus
         raw_key = generate_key()
         db.execute(
             "INSERT INTO api_keys (user_id, key_hash, key_prefix, name, credits) VALUES (?, ?, ?, 'Default', ?)",
-            (user_id, hash_key(raw_key), raw_key[:12] + "...", FREE_TOKENS)
+            (user_id, hash_key(raw_key), raw_key[:12] + "...", free)
         )
+        
+        # Award karma to referrer
+        if referred_by:
+            db.execute("UPDATE users SET karma = karma + 5 WHERE id=?", (referred_by,))
+            db.execute("UPDATE users SET karma = karma + 3 WHERE id=?", (user_id,))
         
         # Create session
         session_token = secrets.token_hex(32)
@@ -153,6 +171,7 @@ async def register_bot(request: Request):
     data = await request.json()
     username = data.get("username", "").strip()
     password = data.get("password", "")
+    ref_code = data.get("ref", "").strip() or None
     
     if not username or len(username) < 3:
         raise HTTPException(400, "Username must be at least 3 characters")
@@ -164,19 +183,58 @@ async def register_bot(request: Request):
         if existing:
             raise HTTPException(400, "Username already taken")
         
+        # Resolve referral
+        referred_by = None
+        if ref_code:
+            referrer = db.execute("SELECT id FROM users WHERE referral_code=?", (ref_code,)).fetchone()
+            if referrer:
+                referred_by = referrer["id"]
+        
+        my_ref_code = generate_referral_code()
         db.execute(
-            "INSERT INTO users (username, pass_hash) VALUES (?, ?)",
-            (username, hash_pass(password))
+            "INSERT INTO users (username, pass_hash, referral_code, referred_by) VALUES (?, ?, ?, ?)",
+            (username, hash_pass(password), my_ref_code, referred_by)
         )
         user_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        
+        free = FREE_TOKENS
+        if referred_by:
+            free += 1000
         
         raw_key = generate_key()
         db.execute(
             "INSERT INTO api_keys (user_id, key_hash, key_prefix, name, credits) VALUES (?, ?, ?, 'Default', ?)",
-            (user_id, hash_key(raw_key), raw_key[:12] + "...", FREE_TOKENS)
+            (user_id, hash_key(raw_key), raw_key[:12] + "...", free)
         )
+        
+        # Award karma
+        if referred_by:
+            db.execute("UPDATE users SET karma = karma + 5 WHERE id=?", (referred_by,))
+            db.execute("UPDATE users SET karma = karma + 3 WHERE id=?", (user_id,))
     
-    return {"api_key": raw_key, "username": username, "free_tokens": FREE_TOKENS}
+    return {"api_key": raw_key, "username": username, "free_tokens": free, "referral_code": my_ref_code}
+
+@app.get("/api/leaderboard")
+async def leaderboard():
+    """Public leaderboard — top users by karma tier."""
+    with get_db() as db:
+        users = db.execute(
+            """SELECT username, karma, referral_code,
+                      (SELECT COUNT(*) FROM users r WHERE r.referred_by=users.id) as referrals
+               FROM users WHERE karma > 0
+               ORDER BY karma DESC LIMIT 50"""
+        ).fetchall()
+    
+    result = []
+    for i, u in enumerate(users):
+        result.append({
+            "rank": i + 1,
+            "username": u["username"],
+            "karma": u["karma"],
+            "tier": karma_tier(u["karma"]),
+            "referrals": u["referrals"],
+        })
+    return {"leaderboard": result}
 
 # ─── Error Console ───────────────────────────────────────────────────
 @app.get("/api/errors")
@@ -258,6 +316,11 @@ async def api_me(request: Request):
             "SELECT COALESCE(SUM(tokens_in+tokens_out),0) FROM usage_log WHERE user_id=? AND date(created_at)=date('now')",
             (user["id"],)
         ).fetchone()[0]
+        
+        # Referral info
+        ref_code = db.execute("SELECT referral_code FROM users WHERE id=?", (user["id"],)).fetchone()["referral_code"]
+        referrals = db.execute("SELECT COUNT(*) as c FROM users WHERE referred_by=?", (user["id"],)).fetchone()["c"]
+        karma = db.execute("SELECT karma FROM users WHERE id=?", (user["id"],)).fetchone()["karma"]
     
     return {
         "user": {"username": user["username"], "email": user["email"]},
@@ -266,6 +329,10 @@ async def api_me(request: Request):
         "usage_7d": [dict(u) for u in usage_7d],
         "ln_address": LN_ADDRESS,
         "price_per_m": PRICE,
+        "referral_code": ref_code,
+        "referrals": referrals,
+        "karma": karma,
+        "karma_tier": karma_tier(karma),
     }
 
 # ─── Key Management ─────────────────────────────────────────────────
@@ -486,6 +553,8 @@ async def ollama_proxy(path: str, request: Request):
                     (key["user_id"], key["id"], rd.get("model","?"),
                      rd.get("prompt_eval_count",0), rd.get("eval_count",0), actual_cost)
                 )
+                # Award karma: +1 per request
+                db.execute("UPDATE users SET karma = karma + 1 WHERE id=?", (key["user_id"],))
             # qwen3.5 fix: if content is empty but reasoning exists, use it
             choices = rd.get("choices", [])
             msg = choices[0].get("message", {}) if choices else {}

@@ -255,6 +255,7 @@ input:focus{outline:none;border-color:#f59e0b}
 .footer{text-align:center;margin-top:20px;font-size:13px;color:#6b7280}
 .footer a{color:#f59e0b}
 .bonus{background:#0a1a0a;border:1px solid #22c55e44;border-radius:8px;padding:12px;color:#86efac;font-size:13px;margin-bottom:20px;text-align:center}
+.ref-bonus{background:#0a0f1a;border:1px solid #f59e0b44;border-radius:8px;padding:12px;color:#fbbf24;font-size:13px;margin-bottom:20px;text-align:center;display:none}
 </style>
 </head>
 <body>
@@ -262,6 +263,7 @@ input:focus{outline:none;border-color:#f59e0b}
   <h1>Create account</h1>
   <p class="sub">Get 10,000 free tokens. No email needed.</p>
   <div class="bonus">Free tier included: 10,000 tokens to try any model</div>
+  <div class="ref-bonus" id="ref-bonus">🎉 Referred by a friend — you both get 1,000 bonus tokens + karma!</div>
   <div class="error" id="error"></div>
   <form id="form">
     <label>Username</label>
@@ -275,12 +277,16 @@ input:focus{outline:none;border-color:#f59e0b}
   <div class="footer">Already have an account? <a href="/login">Log in</a></div>
 </div>
 <script>
+const params=new URLSearchParams(window.location.search);
+const ref=params.get('ref');
+if(ref){document.getElementById('ref-bonus').style.display='block';}
 document.getElementById('form').onsubmit=async e=>{
   e.preventDefault();
   const fd=new FormData(e.target);
+  const body={username:fd.get('username'),password:fd.get('password'),email:fd.get('email')};
+  if(ref)body.ref=ref;
   try{
-    const r=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:fd.get('username'),password:fd.get('password'),email:fd.get('email')})});
+    const r=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();
     if(r.ok||r.redirected)location.href='/app';
     else{document.getElementById('error').textContent=d.detail||'Signup failed';document.getElementById('error').style.display='block';}

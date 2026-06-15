@@ -490,6 +490,30 @@ button:hover{opacity:.9}
 
 </div>
 
+<!-- Leaderboard -->
+<div style="max-width:1400px;margin:24px auto;padding:0 28px">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">🏆 Leaderboard — Top Karma</div>
+    <div id="leaderboard-list" style="min-height:40px">
+      <div style="color:var(--text-muted);font-size:13px">Loading...</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔗 Referral Program</div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px">Invite friends — both earn karma and 1,000 bonus tokens.</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="referral-link" readonly style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card-hover);color:var(--orange);font-size:13px;font-family:monospace" />
+        <button onclick="copyReferral()" style="padding:8px 16px;border-radius:6px;border:none;background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#000;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap">Copy</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;font-size:13px;color:var(--text-muted)">
+      <span>Your referrals: <b id="ref-count" style="color:var(--orange)">0</b></span>
+      <span>Karma earned: <b id="ref-karma" style="color:var(--orange)">+0</b></span>
+    </div>
+  </div>
+</div>
+
 <div class="charts-section" id="charts-section" style="display:none">
   <div class="tab-bar" id="period-tabs">
     <button data-period="24h" class="active">24h</button>
@@ -998,6 +1022,61 @@ async function poll() {
     document.getElementById('updated').textContent = 'connection lost…';
   }
   fetchHistory();
+  loadLeaderboard();
+  loadReferral();
+}
+
+// ── Leaderboard ──────────────────────────────────────────────────────
+var tierColors = {bronze:'#cd7f32',silver:'#c0c0c0',gold:'#ffd700',diamond:'#b9f2ff'};
+var tierEmoji = {bronze:'🥉',silver:'🥈',gold:'🥇',diamond:'💎'};
+
+async function loadLeaderboard() {
+  try {
+    const r = await fetch('/api/leaderboard');
+    const d = await r.json();
+    const el = document.getElementById('leaderboard-list');
+    if (!d.leaderboard || d.leaderboard.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">No users yet. Be the first!</div>';
+      return;
+    }
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+    html += '<tr style="color:var(--text-muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px">#</th><th style="text-align:left;padding:6px 8px">User</th><th style="text-align:center;padding:6px 8px">Tier</th><th style="text-align:right;padding:6px 8px">Karma</th><th style="text-align:right;padding:6px 8px">Referrals</th></tr>';
+    for (const u of d.leaderboard) {
+      const color = tierColors[u.tier] || 'var(--text-muted)';
+      const emoji = tierEmoji[u.tier] || '';
+      html += `<tr style="border-bottom:1px solid var(--border);color:var(--text)">`;
+      html += `<td style="padding:8px;color:var(--text-muted)">${u.rank <= 3 ? ['🥇','🥈','🥉'][u.rank-1] : u.rank}</td>`;
+      html += `<td style="padding:8px;font-weight:600">${u.username}</td>`;
+      html += `<td style="padding:8px;text-align:center"><span style="color:${color};font-weight:700;text-transform:uppercase;font-size:11px;text-shadow:0 0 8px ${color}44">${emoji} ${u.tier}</span></td>`;
+      html += `<td style="padding:8px;text-align:right;color:var(--orange);font-weight:700">${u.karma}</td>`;
+      html += `<td style="padding:8px;text-align:right;color:var(--text-dim)">${u.referrals}</td>`;
+      html += '</tr>';
+    }
+    html += '</table>';
+    el.innerHTML = html;
+  } catch(e) {}
+}
+
+async function loadReferral() {
+  try {
+    const r = await fetch('/api/me');
+    const d = await r.json();
+    if (d.referral_code) {
+      const baseUrl = window.location.origin;
+      document.getElementById('referral-link').value = baseUrl + '/signup?ref=' + d.referral_code;
+    }
+    if (d.referrals !== undefined) document.getElementById('ref-count').textContent = d.referrals;
+    if (d.karma !== undefined) document.getElementById('ref-karma').textContent = '+' + d.karma;
+  } catch(e) {}
+}
+
+function copyReferral() {
+  const el = document.getElementById('referral-link');
+  el.select();
+  navigator.clipboard.writeText(el.value);
+  const btn = el.nextElementSibling;
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 2000);
 }
 
 // ── Charts ──────────────────────────────────────────────────────────

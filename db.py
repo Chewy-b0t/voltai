@@ -26,7 +26,11 @@ def init_db():
                 username    TEXT UNIQUE NOT NULL,
                 pass_hash   TEXT NOT NULL,
                 display     TEXT DEFAULT '',
-                created_at  TEXT DEFAULT (datetime('now'))
+                referral_code TEXT UNIQUE,
+                referred_by INTEGER,
+                karma       INTEGER DEFAULT 0,
+                created_at  TEXT DEFAULT (datetime('now')),
+                FOREIGN KEY (referred_by) REFERENCES users(id)
             );
             CREATE TABLE IF NOT EXISTS api_keys (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,6 +99,18 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_err_time ON error_log(created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_err_user ON error_log(user_id);
         """)
+        # Migration: add new columns to existing tables
+        cols = [r[1] for r in db.execute("PRAGMA table_info(users)").fetchall()]
+        if "referral_code" not in cols:
+            db.execute("ALTER TABLE users ADD COLUMN referral_code TEXT")
+        if "referred_by" not in cols:
+            db.execute("ALTER TABLE users ADD COLUMN referred_by INTEGER")
+        if "karma" not in cols:
+            db.execute("ALTER TABLE users ADD COLUMN karma INTEGER DEFAULT 0")
+        # Generate referral codes for users who don't have one
+        rows = db.execute("SELECT id FROM users WHERE referral_code IS NULL").fetchall()
+        for r in rows:
+            db.execute("UPDATE users SET referral_code=? WHERE id=?", (generate_referral_code(), r["id"]))
 
 def hash_pass(pw: str) -> str:
     salt = secrets.token_hex(16)
@@ -110,6 +126,16 @@ def hash_key(key: str) -> str:
 
 def generate_key() -> str:
     return "sk-" + secrets.token_hex(16)
+
+def generate_referral_code() -> str:
+    return "VTAI-" + secrets.token_hex(4).upper()
+
+def karma_tier(karma: int) -> str:
+    if karma >= 100: return "diamond"
+    if karma >= 50: return "gold"
+    if karma >= 10: return "silver"
+    if karma > 0: return "bronze"
+    return "none"
 
 def sats_for_tokens(tokens: int, price: int = 50) -> int:
     return max(1, (tokens * price) // 1_000_000)
