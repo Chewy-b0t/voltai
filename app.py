@@ -6,7 +6,7 @@ OpenAI-compatible API with Lightning payments.
 Grandma-friendly: visit → sign up → add credits → use API.
 """
 
-import os, json, secrets, asyncio
+import os, json, secrets, asyncio, sqlite3
 from pathlib import Path
 from datetime import datetime
 
@@ -584,13 +584,17 @@ def get_earnings_data():
         pending = conn.execute("SELECT COALESCE(SUM(cost_sats),0) as sats FROM transactions WHERE settled=0").fetchone()["sats"]
         # Withdrawn
         withdrawn = conn.execute("SELECT COALESCE(SUM(amount_sats),0) as sats FROM payouts WHERE status='settled'").fetchone()["sats"]
-        # Today tokens
-        tokens_today = conn.execute("SELECT COALESCE(SUM(tokens_in+tokens_out),0) as t FROM usage_log WHERE date(created_at)=date('now')").fetchone()["t"]
-        # Today requests
-        jobs_today = conn.execute("SELECT COUNT(*) as c FROM usage_log WHERE date(created_at)=date('now')").fetchone()["c"]
-        # Payout history
-        payouts = conn.execute("SELECT amount_sats, created_at FROM payouts ORDER BY id DESC LIMIT 10").fetchall()
+        # Today tokens and jobs from VoltAI's own usage_log
         conn.close()
+        try:
+            vconn = sqlite3.connect("/home/y/voltai/voltai.db")
+            vconn.row_factory = sqlite3.Row
+            tokens_today = vconn.execute("SELECT COALESCE(SUM(tokens_in+tokens_out),0) as t FROM usage_log WHERE date(created_at)=date('now')").fetchone()["t"]
+            jobs_today = vconn.execute("SELECT COUNT(*) as c FROM usage_log WHERE date(created_at)=date('now')").fetchone()["c"]
+            vconn.close()
+        except:
+            tokens_today = 0
+            jobs_today = 0
         return {
             "total_sats": total,
             "today_sats": today,
@@ -598,9 +602,9 @@ def get_earnings_data():
             "withdrawn_sats": withdrawn,
             "tokens_today": tokens_today,
             "jobs_today": jobs_today,
-            "payouts": [dict(p) for p in payouts]
+            "payouts": []
         }
-    except:
+    except Exception:
         return {"total_sats": 0, "today_sats": 0, "pending_sats": 0, "withdrawn_sats": 0, "tokens_today": 0, "jobs_today": 0, "payouts": []}
 
 @app.get("/api/status")
