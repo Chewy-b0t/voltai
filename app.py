@@ -33,7 +33,7 @@ FREE_TOKENS = int(os.environ.get("FREE_TOKENS", "10000"))
 SITE_NAME = "VoltAI"
 
 app = FastAPI(title=SITE_NAME, version="1.0.0")
-client = httpx.AsyncClient(timeout=120.0)
+client = httpx.AsyncClient(timeout=120.0, limits=httpx.Limits(max_connections=2, max_keepalive_connections=2))
 
 # ─── Error Logger ────────────────────────────────────────────────────
 def log_error(user_id=None, api_key_id=None, endpoint=None, method=None,
