@@ -716,6 +716,13 @@ async def owlrun_status(request: Request):
 @app.get("/api/history")
 async def owlrun_history(period: str = "24h"):
     """Real usage history from usage_log."""
+    # Get BTC price for USD conversion
+    try:
+        btc_data = json.loads(get_setting("btc_price_cache", '{"live":64000}'))
+        btc_usd = btc_data.get("live", 64000)
+    except:
+        btc_usd = 64000
+    
     with get_db() as db:
         rows = db.execute(
             """SELECT date(created_at) as date, SUM(tokens_in+tokens_out) as tokens, 
@@ -723,7 +730,21 @@ async def owlrun_history(period: str = "24h"):
                FROM usage_log WHERE created_at>=datetime('now','-7 days')
                GROUP BY date(created_at) ORDER BY date"""
         ).fetchall()
-    return {"period": period, "buckets": [dict(r) for r in rows]}
+    
+    buckets = []
+    for r in rows:
+        r = dict(r)
+        sats = r["sats"]
+        # Convert sats to USD: 1 BTC = 100,000,000 sats
+        earned_usd = (sats / 100_000_000) * btc_usd
+        buckets.append({
+            "label": r["date"],
+            "jobs": r["requests"],
+            "earned": earned_usd,
+            "tokens": r["tokens"],
+            "sats": sats
+        })
+    return {"period": period, "buckets": buckets}
 
 @app.post("/api/claim-ecash")
 async def owlrun_claim():
