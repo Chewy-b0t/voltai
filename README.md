@@ -142,6 +142,14 @@ When a new user registers with your referral code:
 
 **Leaderboard = organic growth engine.**
 
+## GPU Fund
+
+We're saving up for an **RTX PRO 6000 Blackwell Max-Q** (96 GB GDDR7) to run 70B+ models locally. Anyone can donate via Lightning — the fund tracker is public on the Owlrun dashboard (`/owlrun`).
+
+- **Goal:** 1M sats (~$658 toward $10K GPU)
+- **Donate:** Click any amount on the dashboard or call `POST /api/gpu-fund/donate`
+- **Status:** Public at `GET /api/gpu-fund`
+
 ## License
 
 MIT
