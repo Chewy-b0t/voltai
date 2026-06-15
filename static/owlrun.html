@@ -357,33 +357,6 @@ button:hover{opacity:.9}
         Lightning fees go to the Bitcoin network, not Owlrun. Our fee is always under 10%.
       </div>
 
-      <!-- Advanced: ecash -->
-      <div style="margin-top:14px">
-        <details>
-          <summary style="cursor:pointer;font-size:14px;color:#aaaabb;user-select:none">&#9656; Advanced: Withdraw as ecash (QR)</summary>
-          <div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:8px">
-            <div class="stat">
-              <span class="stat-label">Local ecash</span>
-              <span class="stat-value" id="ecash-local-sats" style="color:#f7931a">0 sats</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Proofs</span>
-              <span class="stat-value" id="ecash-proof-count">0</span>
-            </div>
-            <div style="margin-top:8px">
-              <button id="btn-claim" onclick="claimEcash()" style="padding:8px 16px;background:#f7931a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px">Claim All</button>
-            </div>
-            <div id="claim-result" style="display:none;margin-top:10px">
-              <textarea id="claim-token" readonly style="width:100%;height:60px;background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;font-family:monospace;resize:vertical;box-sizing:border-box"></textarea>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-                <span id="claim-amount" style="font-size:13px;color:#aaaabb"></span>
-                <button onclick="copyToken()" style="padding:4px 10px;background:var(--bg-card-hover);color:var(--text);border:1px solid var(--border-active);border-radius:4px;cursor:pointer;font-size:12px">Copy</button>
-              </div>
-            </div>
-            <div id="ecash-token-history" style="margin-top:10px"></div>
-          </div>
-        </details>
-      </div>
 
       <div style="font-size:13px;color:var(--text-dim);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         Earnings auto-sent to your Lightning wallet. No action needed.
@@ -835,18 +808,6 @@ function update(d) {
     } else {
       phEl.style.display = 'none';
     }
-    // Ecash advanced section
-    document.getElementById('ecash-local-sats').textContent = fmtSats(sw.local_sats);
-    document.getElementById('ecash-proof-count').textContent = sw.proof_count || 0;
-    // Token history
-    var histEl = document.getElementById('ecash-token-history');
-    if (sw.token_history && sw.token_history.length > 0) {
-      histEl.innerHTML = '<div style="font-size:13px;color:#aaaabb;margin-bottom:6px">Recent tokens:</div>' +
-        sw.token_history.slice(0, 5).map(function(t) {
-          return '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;word-break:break-all">' +
-            fmtSats(t.sats) + ' — ' + new Date(t.claimed_at).toLocaleString() + '</div>';
-        }).join('');
-    }
   } else {
     document.getElementById('wallet-setup').style.display = '';
     document.getElementById('wallet-active').style.display = 'none';
@@ -1034,41 +995,6 @@ async function poll() {
     document.getElementById('updated').textContent = 'connection lost…';
   }
   fetchHistory();
-}
-
-async function claimEcash() {
-  var btn = document.getElementById('btn-claim');
-  btn.disabled = true; btn.textContent = 'Claiming…';
-  try {
-    var r = await fetch('/api/claim-ecash', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount_sats:0})});
-    var data = await r.json();
-    if (data.error) { alert('Claim failed: ' + data.error); return; }
-    document.getElementById('claim-token').value = data.token;
-    document.getElementById('claim-amount').textContent = data.amount_sats ? Math.round(data.amount_sats/1000).toLocaleString() + ' sats claimed' : '';
-    document.getElementById('claim-result').style.display = '';
-  } catch(e) { alert('Claim failed: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = 'Claim All'; }
-}
-
-async function exportToken() {
-  var btn = document.getElementById('btn-export');
-  btn.disabled = true;
-  try {
-    var r = await fetch('/api/status');
-    var d = await r.json();
-    if (d.sats_wallet && d.sats_wallet.local_sats > 0) {
-      alert('Export is available after claiming. Use Claim All first, then copy the token.');
-    } else {
-      alert('No local proofs to export.');
-    }
-  } finally { btn.disabled = false; }
-}
-
-function copyToken() {
-  var ta = document.getElementById('claim-token');
-  ta.select(); document.execCommand('copy');
-  var btn = event.target; btn.textContent = 'Copied!';
-  setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
 }
 
 // ── Charts ──────────────────────────────────────────────────────────
