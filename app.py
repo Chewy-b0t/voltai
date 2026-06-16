@@ -26,7 +26,7 @@ GATEWAY_URL = os.environ.get("GATEWAY_URL", "http://127.0.0.1:11440")
 PORT = int(os.environ.get("PORT", "11435"))
 HOST = os.environ.get("HOST", "0.0.0.0")
 BASE_URL = os.environ.get("BASE_URL", f"http://127.0.0.1:{PORT}")
-LN_ADDRESS = os.environ.get("LN_ADDRESS", "postalzombie921@minibits.cash")
+LN_ADDRESS = os.environ.get("LN_ADDRESS", "darkdice148@walletofsatoshi.com")
 MINIBITS_LNURL = f"https://minibits.cash/.well-known/lnurlp/{LN_ADDRESS.split('@')[0]}"
 PRICE = int(os.environ.get("PRICE_SATS_PER_M", "50"))
 FREE_TOKENS = int(os.environ.get("FREE_TOKENS", "10000"))
@@ -591,20 +591,13 @@ async def list_models():
 
 # ─── Landing ─────────────────────────────────────────────────────────
 @app.get("/")
-async def landing(request: Request):
-    user = get_user(request)
-    if user:
-        return RedirectResponse("/app", status_code=303)
-    return HTMLResponse(LANDING_HTML)
-
 @app.get("/owlrun")
 async def owlrun_dashboard():
     """Serve the Owlrun-style dashboard."""
-    from fastapi.responses import HTMLResponse
     html_path = Path("/home/y/voltai/static/owlrun.html")
     if html_path.exists():
         return HTMLResponse(content=html_path.read_text())
-    return HTMLResponse(content="<h1>Owlrun dashboard not found</h1>", status_code=404)
+    return HTMLResponse(content="<h1>Dashboard not found</h1>", status_code=404)
 
 def get_setting(key, default=""):
     with get_db() as db:

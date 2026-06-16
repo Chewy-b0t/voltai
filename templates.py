@@ -218,17 +218,7 @@ input:focus{outline:none;border-color:#f59e0b}
   <div class="footer">Don't have an account? <a href="/signup">Sign up free</a></div>
 </div>
 <script>
-document.getElementById('form').onsubmit=async e=>{
-  e.preventDefault();
-  const fd=new FormData(e.target);
-  try{
-    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:fd.get('username'),password:fd.get('password')})});
-    const d=await r.json();
-    if(r.ok)location.href=d.redirect;
-    else{document.getElementById('error').textContent=d.detail||'Login failed';document.getElementById('error').style.display='block';}
-  }catch(e){document.getElementById('error').textContent='Network error';document.getElementById('error').style.display='block';}
-};
+document.getElementById('form').onsubmit=function(e){e.preventDefault();var fd=new FormData(e.target);fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:fd.get('username'),password:fd.get('password')})}).then(function(r){return r.json();}).then(function(d){if(d.redirect)window.location.href=d.redirect;else alert('Login failed');}).catch(function(){alert('Login failed');});};
 </script>
 </body>
 </html>"""
@@ -277,20 +267,18 @@ input:focus{outline:none;border-color:#f59e0b}
   <div class="footer">Already have an account? <a href="/login">Log in</a></div>
 </div>
 <script>
-const params=new URLSearchParams(window.location.search);
-const ref=params.get('ref');
+var params=new URLSearchParams(window.location.search);
+var ref=params.get('ref');
 if(ref){document.getElementById('ref-bonus').style.display='block';}
-document.getElementById('form').onsubmit=async e=>{
+document.getElementById('form').onsubmit=function(e){
   e.preventDefault();
-  const fd=new FormData(e.target);
-  const body={username:fd.get('username'),password:fd.get('password'),email:fd.get('email')};
+  var fd=new FormData(e.target);
+  var body={username:fd.get('username'),password:fd.get('password'),email:fd.get('email')};
   if(ref)body.ref=ref;
-  try{
-    const r=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await r.json();
-    if(r.ok||r.redirected)location.href='/app';
+  fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(d){
+    if(d.redirect)window.location.href=d.redirect;
     else{document.getElementById('error').textContent=d.detail||'Signup failed';document.getElementById('error').style.display='block';}
-  }catch(e){document.getElementById('error').textContent='Network error';document.getElementById('error').style.display='block';}
+  }).catch(function(){document.getElementById('error').textContent='Network error';document.getElementById('error').style.display='block';});
 };
 </script>
 </body>
@@ -482,13 +470,13 @@ function show(name,el){
   if(el)el.classList.add('active');
 }
 
-async function load(){
-  try{
-    var r=await fetch('/api/me');
+function load(){
+  fetch('/api/me').then(function(r){
     if(!r.ok)return;
-    data=await r.json();
-    render();
-  }catch(e){}
+    return r.json();
+  }).then(function(d){
+    if(d){data=d;render();}
+  }).catch(function(){});
 }
 
 function render(){
@@ -506,61 +494,64 @@ function render(){
   document.getElementById('models-table').innerHTML=MODEL_LIST.map(function(m){return '<tr><td>'+m.name+'</td><td>'+m.vram+'</td><td class="green">'+m.price+' sats/M</td></tr>';}).join('');
 }
 
-async function createKey(){
+function createKey(){
   var name=document.getElementById('key-name').value||'Default';
-  var r=await(await fetch('/api/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})})).json();
-  document.getElementById('new-key-form').style.display='none';
-  document.getElementById('new-key-display').style.display='block';
-  document.getElementById('new-key-display').innerHTML='<div class="key-box"><div style="color:#3fb950;font-weight:600;margin-bottom:4px">Key created</div><div>'+r.key+'</div><div style="color:#8b949e;font-size:11px;margin-top:4px">Copy this now — won\'t be shown again</div></div>';
-  document.getElementById('key-name').value='';
-  load();
+  fetch('/api/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})}).then(function(r){return r.json();}).then(function(r){
+    document.getElementById('new-key-form').style.display='none';
+    document.getElementById('new-key-display').style.display='block';
+    document.getElementById('new-key-display').innerHTML='<div class="key-box"><div style="color:#3fb950;font-weight:600;margin-bottom:4px">Key created</div><div>'+r.key+'</div><div style="color:#8b949e;font-size:11px;margin-top:4px">Copy this now — won\'t be shown again</div></div>';
+    document.getElementById('key-name').value='';
+    load();
+  }).catch(function(){});
 }
 
-async function delKey(id){if(!confirm('Delete?'))return;await fetch('/api/keys/'+id,{method:'DELETE'});load();}
+function delKey(id){if(!confirm('Delete?'))return;fetch('/api/keys/'+id,{method:'DELETE'}).then(function(){load();});}
 
-async function buyCredits(){
+function buyCredits(){
   var kid=document.getElementById('buy-key').value;
   var sats=parseInt(document.getElementById('buy-amount').value);
   if(!kid){alert('Select a key');return;}
-  var r=await fetch('/api/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key_id:parseInt(kid),amount_sats:sats})});
-  var d=await r.json();
-  if(!r.ok){alert(d.detail||'Error');return;}
-  document.getElementById('invoice-area').innerHTML='<div class="inv-box"><div style="font-weight:600;color:#58a6ff;margin-bottom:8px">'+d.amount_sats+' sats invoice</div><div style="font-size:12px;margin-bottom:8px">Tokens: '+d.tokens.toLocaleString()+'</div><div style="background:#0d1117;padding:10px;border-radius:4px;font-family:monospace;font-size:11px;word-break:break-all">'+d.invoice+'</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="copyInv(this,\\''+d.invoice+'\\')">Copy</button><button class="btn btn-sm btn-outline" onclick="checkPay(\\''+d.payment_hash+'\\')">Check</button></div><div id="pay-status" style="margin-top:8px;font-size:12px;color:#8b949e">Waiting...</div></div>';
-  pollPayment(d.payment_hash);
+  fetch('/api/buy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key_id:parseInt(kid),amount_sats:sats})}).then(function(r){return r.json();}).then(function(d){
+    if(d.detail){alert(d.detail);return;}
+    document.getElementById('invoice-area').innerHTML='<div class="inv-box"><div style="font-weight:600;color:#58a6ff;margin-bottom:8px">'+d.amount_sats+' sats invoice</div><div style="font-size:12px;margin-bottom:8px">Tokens: '+d.tokens.toLocaleString()+'</div><div style="background:#0d1117;padding:10px;border-radius:4px;font-family:monospace;font-size:11px;word-break:break-all">'+d.invoice+'</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-sm btn-primary" onclick="copyInv(this)">Copy</button><button class="btn btn-sm btn-outline" onclick="checkPay(\''+d.payment_hash+'\')">Check</button></div><div id="pay-status" style="margin-top:8px;font-size:12px;color:#8b949e">Waiting...</div></div>';
+    window._lastInvoice=d.invoice;
+    pollPayment(d.payment_hash);
+  }).catch(function(){});
 }
 
-function copyInv(btn,inv){navigator.clipboard.writeText(inv);btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy';},1500);}
+function copyInv(btn){navigator.clipboard.writeText(window._lastInvoice);btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy';},1500);}
 
 var pollTimer=null;
 function pollPayment(hash){
   if(pollTimer)clearInterval(pollTimer);
-  pollTimer=setInterval(async function(){
-    try{
-      var r=await(await fetch('/api/invoice/'+hash+'/status')).json();
+  pollTimer=setInterval(function(){
+    fetch('/api/invoice/'+hash+'/status').then(function(r){return r.json();}).then(function(r){
       if(r.status==='paid'){clearInterval(pollTimer);document.getElementById('pay-status').innerHTML='<span style="color:#3fb950;font-weight:600">Paid!</span>';load();}
-    }catch(e){}
+    }).catch(function(){});
   },3000);
 }
 
-async function checkPay(hash){
-  var r=await(await fetch('/api/invoice/'+hash+'/status')).json();
-  if(r.status==='paid'){if(pollTimer)clearInterval(pollTimer);document.getElementById('pay-status').innerHTML='<span style="color:#3fb950;font-weight:600">Paid!</span>';load();}
+function checkPay(hash){
+  fetch('/api/invoice/'+hash+'/status').then(function(r){return r.json();}).then(function(r){
+    if(r.status==='paid'){if(pollTimer)clearInterval(pollTimer);document.getElementById('pay-status').innerHTML='<span style="color:#3fb950;font-weight:600">Paid!</span>';load();}
+  }).catch(function(){});
 }
 
-async function loadErrors(){
-  try{
-    var r=await fetch('/api/errors?limit=50');
+function loadErrors(){
+  fetch('/api/errors?limit=50').then(function(r){
     if(!r.ok)return;
-    var d=await r.json();
+    return r.json();
+  }).then(function(d){
+    if(!d)return;
     var el=document.getElementById('error-console');
     var count=document.getElementById('error-count');
     if(!d.errors.length){el.innerHTML='<div style="color:#8b949e;font-size:13px;padding:20px;text-align:center">No errors</div>';count.textContent='0';return;}
     count.textContent=d.errors.length;
     el.innerHTML=d.errors.map(function(e){return '<div class="err-item"><span class="tag '+(e.status_code>=500?'tag-r':'tag-o')+'">'+e.status_code+'</span> <span style="color:#d29922">'+e.method+'</span> '+e.endpoint+'<div style="color:#8b949e;margin-top:4px">'+e.error_msg+'</div></div>';}).join('');
-  }catch(e){}
+  }).catch(function(){});
 }
 
-async function clearErrors(){await fetch('/api/errors',{method:'DELETE'});loadErrors();}
+function clearErrors(){fetch('/api/errors',{method:'DELETE'}).then(function(){loadErrors();});}
 
 load();
 setInterval(load,15000);

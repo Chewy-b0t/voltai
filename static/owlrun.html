@@ -5,7 +5,7 @@
 <title>Owlrun Dashboard</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f0800;--bg-card:#1a1008;--bg-card-hover:#231610;--border:#3d2a18;--border-active:#5a3d24;--text:#f0e0c8;--text-dim:#b89070;--text-muted:#987060;--text-heading:#fff;--accent:#f59e0b;--accent-hover:#d97706;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;--cyan:#06b6d4;--orange:#f59e0b;--orange-light:#fbbf24;--orange-dark:#b45309;--orange-deep:#92400e;--orange-glow:rgba(245,158,11,0.15);--transition:0.35s cubic-bezier(0.4,0,0.2,1);--bar-bg:#3d2a18;--wallet-warn-bg:#2d1f00;--wallet-warn-border:#b45309;--wallet-ok-bg:#1a1008;--wallet-ok-border:#f59e0b;--code-bg:#1a1008;--radius:16px}
+:root{--bg:#0f0800;--bg-card:#1a1008;--bg-card-hover:#231610;--border:#3d2a18;--border-active:#5a3d24;--text:#f0e0c8;--text-dim:#b89070;--text-muted:#987060;--text-heading:#fff;--accent:#f59e0b;--accent-hover:#d97706;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;--cyan:#06b6d4;--orange:#f59e0b;--orange-light:#fbbf24;--orange-dark:#b45309;--orange-deep:#92400e;--orange-glow:rgba(245,158,11,0.15);--transition:0.35s cubic-bezier(0.4,0,0.2,1);--bar-bg:#3d2a18;--wallet-warn-bg:#2d1f00;--wallet-warn-border:#b45309;--wallet-ok-bg:#1a1008;--wallet-ok-border:#f59e0b;--code-bg:#1a1008;--radius:16px;--temp:#fb923c}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:15px;transition:background var(--transition),color var(--transition)}
 a{color:var(--orange);text-decoration:none}
 /* Animated background - orange gradients */
@@ -397,135 +397,99 @@ button:hover{opacity:.9}
   </div>
 
   <div class="card">
-    <div class="card-title">Bitcoin Price</div>
-    <div class="stat">
-      <span class="stat-label">Live</span>
-      <span class="stat-value" id="btc-live">—</span>
+    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Bitcoin Price</div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Live</div>
+      <div style="font-size:32px;font-weight:800;color:var(--orange);font-variant-numeric:tabular-nums;letter-spacing:-0.5px" id="btc-live">—</div>
     </div>
-    <div class="stat">
-      <span class="stat-label">Yesterday's Fix</span>
-      <span class="stat-value" id="btc-owlrun">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">24h Avg</span>
-      <span class="stat-value" id="btc-daily">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">7d Avg</span>
-      <span class="stat-value" id="btc-weekly">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Status</span>
-      <span class="stat-value" id="btc-status">—</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:14px;text-align:center">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Yesterday's Fix</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-dim);font-variant-numeric:tabular-nums" id="btc-owlrun">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">24h Avg</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-dim);font-variant-numeric:tabular-nums" id="btc-daily">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">7d Avg</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-dim);font-variant-numeric:tabular-nums" id="btc-weekly">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Status</div>
+        <div style="font-size:14px;font-weight:600;padding:3px 10px;border-radius:12px;display:inline-block" id="btc-status">—</div>
+      </div>
     </div>
   </div>
 
   <!-- ═══ Row 2 right: Gateway, GPU, Disk ═══ -->
   <div class="card">
-    <div class="card-title">Gateway</div>
-    <div class="stat">
-      <span class="stat-label">Connection</span>
-      <span class="stat-value" id="gw-connected">—</span>
+    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Gateway</div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:14px;font-weight:600" id="gw-connected">—</div>
     </div>
-    <div class="stat">
-      <span class="stat-label">Jobs today</span>
-      <span class="stat-value" id="gw-jobs">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Tokens today</span>
-      <span class="stat-value" id="gw-tokens">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Queue depth</span>
-      <span class="stat-value" id="gw-queue">—</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;text-align:center">
+      <div>
+        <div style="font-size:22px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums" id="gw-jobs">—</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Jobs today</div>
+      </div>
+      <div>
+        <div style="font-size:22px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums" id="gw-tokens">—</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tokens today</div>
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:22px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums" id="gw-queue">—</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Queue depth</div>
+      </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">GPU</div>
-    <div class="stat"><span class="stat-label" id="gpu-name" style="color:#d0d0e0;font-size:15px"></span></div>
-    <div class="stat">
-      <span class="stat-label">Utilisation</span>
-      <span class="stat-value" style="display:flex;align-items:center;gap:8px">
-        <span id="util-pct">—</span>
-        <div class="bar-wrap"><div class="bar-fill bar-green" id="util-bar" style="width:0%"></div></div>
-      </span>
+    <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">GPU</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="gpu-name" title="">—</div>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <span style="font-size:28px;font-weight:800;color:var(--green)" id="util-pct">—</span>
+        <span style="font-size:13px;color:var(--text-dim)">utilization</span>
+      </div>
+      <div class="bar-wrap" style="height:8px"><div class="bar-fill bar-green" id="util-bar" style="width:0%;transition:width 0.6s ease"></div></div>
     </div>
-    <div class="stat">
-      <span class="stat-label">VRAM free</span>
-      <span class="stat-value" id="vram-free">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Temperature</span>
-      <span class="stat-value" id="temp">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Power draw</span>
-      <span class="stat-value" id="power">—</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">VRAM</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent)" id="vram-free">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Temp</div>
+        <div style="font-size:15px;font-weight:700;color:var(--temp)" id="temp">—</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Power</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text)" id="power">—</div>
+      </div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">Disk</div>
-    <div class="stat">
-      <span class="stat-label">Free</span>
-      <span class="stat-value" style="display:flex;align-items:center;gap:8px">
-        <span id="disk-free">—</span>
-        <div class="bar-wrap"><div class="bar-fill bar-green" id="disk-bar" style="width:0%"></div></div>
-      </span>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <span style="font-size:22px;font-weight:700;color:var(--green)" id="disk-free">—</span>
+        <span style="font-size:13px;color:var(--text-dim)">free of <span id="disk-total">—</span></span>
+      </div>
+      <div class="bar-wrap" style="height:8px"><div class="bar-fill bar-green" id="disk-bar" style="width:0%;transition:width 0.6s ease"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:11px;color:var(--text-muted)" id="disk-used-label">—</span>
+        <span style="font-size:11px;color:var(--text-muted)" id="disk-pct-label">—</span>
+      </div>
     </div>
-    <div class="stat">
-      <span class="stat-label">Total</span>
-      <span class="stat-value" id="disk-total">—</span>
-    </div>
-    <div class="stat">
-      <span class="stat-label">Path</span>
-      <span class="stat-value" style="font-size:14px;color:#aaaabb;max-width:180px;text-align:right;word-break:break-all" id="disk-path">—</span>
-    </div>
+    <div style="font-size:12px;color:var(--text-muted);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="disk-path" title="">—</div>
   </div>
 
 </div>
 
 
 
-</div>
-
-<!-- GPU Fund -->
-<div style="max-width:1400px;margin:0 auto;padding:0 28px 24px">
-  <div class="card" style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1008 100%);border-color:var(--orange-dark)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div>
-        <div class="card-title" style="margin-bottom:4px">🎯 GPU Fund — RTX PRO 6000 Blackwell</div>
-        <div style="font-size:12px;color:var(--text-dim)">96 GB GDDR7 • Run 70B+ models locally</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:24px;font-weight:800;color:var(--orange)" id="gpu-raised">0 sats</div>
-        <div style="font-size:12px;color:var(--text-dim)">of <span id="gpu-goal">1M sats</span></div>
-      </div>
-    </div>
-    <div style="background:var(--bar-bg);border-radius:6px;height:12px;margin-bottom:10px;overflow:hidden">
-      <div id="gpu-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--orange-dark),var(--orange),var(--orange-light));width:0%;transition:width 1s ease"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:13px;color:var(--text-dim)"><span id="gpu-percent">0</span>% funded • <span id="gpu-donors">0</span> donors • ~$<span id="gpu-usd">0</span></div>
-      <div style="font-size:11px;color:var(--text-muted)">BTC: $<span id="gpu-btc">65,000</span></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button onclick="donateGpu(1000)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">⚡ 1K sats</button>
-      <button onclick="donateGpu(5000)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">⚡ 5K sats</button>
-      <button onclick="donateGpu(10000)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">⚡ 10K sats</button>
-      <button onclick="donateGpuCustom()" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--orange);background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#000;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s">Custom</button>
-    </div>
-    <div id="gpu-donate-msg" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px">
-      <div style="font-size:13px;color:var(--text);margin-bottom:8px" id="gpu-invoice-status">Scan QR or copy invoice below</div>
-      <div style="background:var(--bg-card-hover);border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:var(--orange);word-break:break-all;max-height:60px;overflow-y:auto" id="gpu-invoice"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button onclick="copyInvoice('gpu-invoice')" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:12px;cursor:pointer">Copy Invoice</button>
-        <button onclick="checkGpuPayment()" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--orange-dark);background:transparent;color:var(--orange);font-size:12px;cursor:pointer">Check Payment</button>
-      </div>
-    </div>
-    <div id="gpu-recent" style="max-height:100px;overflow-y:auto"></div>
-  </div>
 </div>
 
 <div class="charts-section" id="charts-section" style="display:none">
@@ -625,7 +589,7 @@ function update(d) {
     ww.style.display = 'block';
   } else { ww.classList.remove('configured'); ww.style.display = 'none'; }
 
-  const [dotClass, label] = stateDisplay(d.state);
+  var [dotClass, label] = stateDisplay(d.state);
   var badgeHtml = '<span class="dot ' + dotClass + '"></span>' + label;
   if (d.state === 'error' && d.error_detail) {
     badgeHtml += '<div style="margin-top:10px;padding:10px 12px;background:var(--wallet-warn-bg);border:1px solid #ef4444;border-radius:8px;font-size:13px;color:#fca5a5;line-height:1.5;font-weight:400">' + escapeHtml(d.error_detail) + '</div>';
@@ -650,16 +614,19 @@ function update(d) {
   document.getElementById('today-sats').textContent = fmtMsats(todayMsats);
   document.getElementById('today-usd').textContent = '~' + fmt2(d.earnings.today_usd);
 
-  const g = d.gpu;
+  var g = d.gpu;
   document.getElementById('gpu-name').textContent  = g.name || 'No GPU detected';
-  document.getElementById('util-pct').textContent  = g.util_pct + '%';
-  document.getElementById('util-bar').style.width  = g.util_pct + '%';
+  document.getElementById('gpu-name').title        = g.name || '';
+  document.getElementById('util-pct').textContent  = g.util_pct != null ? g.util_pct + '%' : '—';
+  document.getElementById('util-bar').style.width  = (g.util_pct || 0) + '%';
   document.getElementById('vram-free').textContent = fmtMB(g.vram_free_mb);
-  document.getElementById('temp').textContent      = g.temp_c ? g.temp_c + ' °C' : '—';
-  document.getElementById('power').textContent     = g.power_w ? g.power_w.toFixed(0) + ' W' : '—';
+  document.getElementById('temp').textContent      = g.temp_c ? g.temp_c + '°' : '—';
+  document.getElementById('power').textContent     = g.power_w ? g.power_w.toFixed(0) + 'W' : '—';
 
-  const utilBar = document.getElementById('util-bar');
+  var utilBar = document.getElementById('util-bar');
   utilBar.className = 'bar-fill ' + (g.util_pct > 80 ? 'bar-red' : g.util_pct > 50 ? 'bar-yellow' : 'bar-green');
+  var tempEl = document.getElementById('temp');
+  if (g.temp_c) tempEl.style.color = g.temp_c > 80 ? 'var(--red)' : g.temp_c > 65 ? 'var(--yellow)' : 'var(--temp)';
 
   // Model picker — interactive
   var ms = document.getElementById('models-section');
@@ -736,20 +703,33 @@ function update(d) {
     ms.innerHTML = html;
   }
 
-  const gw = d.gateway;
-  const connEl = document.getElementById('gw-connected');
-  connEl.textContent = gw.connected ? 'Connected' : 'Disconnected';
-  connEl.className = 'stat-value ' + (gw.connected ? 'connected' : 'disconnected');
+  var gw = d.gateway;
+  var connEl = document.getElementById('gw-connected');
+  connEl.textContent = gw.connected ? '● Connected' : '○ Disconnected';
+  if (gw.connected) {
+    connEl.style.color = '#22c55e';
+    connEl.style.background = 'rgba(34,197,94,0.12)';
+    connEl.style.border = '1px solid rgba(34,197,94,0.25)';
+  } else {
+    connEl.style.color = '#ef4444';
+    connEl.style.background = 'rgba(239,68,68,0.12)';
+    connEl.style.border = '1px solid rgba(239,68,68,0.25)';
+  }
   document.getElementById('gw-jobs').textContent   = gw.jobs_today;
   document.getElementById('gw-tokens').textContent = gw.tokens_today.toLocaleString();
   document.getElementById('gw-queue').textContent  = gw.queue_depth_global;
 
-  const dk = d.disk;
-  document.getElementById('disk-free').textContent  = dk.free_gb.toFixed(1) + ' GB (' + dk.free_pct.toFixed(0) + '%)';
+  var dk = d.disk;
+  var usedGb = dk.total_gb - dk.free_gb;
+  var usedPct = (100 - dk.free_pct).toFixed(0);
+  document.getElementById('disk-free').textContent  = dk.free_gb.toFixed(1) + ' GB';
   document.getElementById('disk-total').textContent = dk.total_gb.toFixed(0) + ' GB';
+  document.getElementById('disk-used-label').textContent = usedGb.toFixed(0) + ' GB used';
+  document.getElementById('disk-pct-label').textContent = usedPct + '% full';
   document.getElementById('disk-path').textContent  = dk.path;
-  const diskBar = document.getElementById('disk-bar');
-  diskBar.style.width = dk.free_pct + '%';
+  document.getElementById('disk-path').title = dk.path;
+  var diskBar = document.getElementById('disk-bar');
+  diskBar.style.width = (100 - dk.free_pct) + '%';
   diskBar.className = 'bar-fill ' + (dk.free_pct < 10 ? 'bar-red' : dk.free_pct < 30 ? 'bar-yellow' : 'bar-green');
 
   // Wallet (Lightning address)
@@ -822,10 +802,9 @@ function update(d) {
     document.getElementById('wallet-today-sats').textContent = fmtSats(sw.gateway_sats);
     document.getElementById('wallet-withdrawn').textContent = fmtSats(sw.local_sats);
     if (sw.gateway_sats > 0 && thr > 0) {
-      var pendingMsats = sw.gateway_sats;
-      var thresholdMsats = thr * 1000;
-      var pct = Math.min(100, Math.round(pendingMsats / thresholdMsats * 100));
-      var remaining = Math.max(0, Math.round((thresholdMsats - pendingMsats) / 1000));
+      var earnedSats = Math.round(sw.gateway_sats / 1000);
+      var pct = Math.min(100, Math.round(earnedSats / thr * 100));
+      var remaining = Math.max(0, thr - earnedSats);
       document.getElementById('wallet-next-payout').textContent = pct + '% to threshold (' + remaining + ' sats to go)';
     } else {
       document.getElementById('wallet-next-payout').textContent = '—';
@@ -877,7 +856,19 @@ function update(d) {
     document.getElementById('btc-weekly').textContent = fmtUsd(bp.weekly_avg);
     var statusEl = document.getElementById('btc-status');
     statusEl.textContent = bp.status || '—';
-    statusEl.style.color = bp.status === 'normal' ? '#22c55e' : bp.status === 'stale' ? '#eab308' : '#a0a0b8';
+    if (bp.status === 'normal') {
+      statusEl.style.color = '#22c55e';
+      statusEl.style.background = 'rgba(34,197,94,0.12)';
+      statusEl.style.border = '1px solid rgba(34,197,94,0.25)';
+    } else if (bp.status === 'stale') {
+      statusEl.style.color = '#eab308';
+      statusEl.style.background = 'rgba(234,179,8,0.12)';
+      statusEl.style.border = '1px solid rgba(234,179,8,0.25)';
+    } else {
+      statusEl.style.color = '#a0a0b8';
+      statusEl.style.background = 'rgba(160,160,184,0.08)';
+      statusEl.style.border = '1px solid rgba(160,160,184,0.15)';
+    }
   }
 
   // Broadcasts
@@ -897,7 +888,7 @@ function update(d) {
   document.getElementById('updated').textContent = 'updated ' + new Date().toLocaleTimeString();
 }
 
-async function saveLightningAddress() {
+function saveLightningAddress() {
   var addr = document.getElementById('ln-address-input').value.trim();
   var errEl = document.getElementById('ln-save-error');
   errEl.style.display = 'none';
@@ -908,16 +899,13 @@ async function saveLightningAddress() {
   }
   var btn = document.getElementById('btn-save-ln');
   btn.disabled = true; btn.textContent = 'Saving...';
-  try {
-    var r = await fetch('/api/set-lightning-address', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({address:addr})});
-    var data = await r.json();
+  fetch('/api/set-lightning-address', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({address:addr})}).then(function(r){return r.json();}).then(function(data){
     if (data.error) { errEl.textContent = data.error; errEl.style.display = ''; return; }
-    poll(); // refresh immediately
-  } catch(e) { errEl.textContent = 'Failed: ' + e.message; errEl.style.display = ''; }
-  finally { btn.disabled = false; btn.textContent = 'Save & Start Earning'; }
+    poll();
+  }).catch(function(e){ errEl.textContent = 'Failed: ' + e.message; errEl.style.display = ''; }).finally(function(){ btn.disabled = false; btn.textContent = 'Save & Start Earning'; });
 }
 
-async function saveLightningAddressEdit() {
+function saveLightningAddressEdit() {
   var addr = document.getElementById('ln-address-edit').value.trim();
   var errEl = document.getElementById('ln-edit-error');
   errEl.style.display = 'none';
@@ -926,13 +914,11 @@ async function saveLightningAddressEdit() {
     errEl.style.display = '';
     return;
   }
-  try {
-    var r = await fetch('/api/set-lightning-address', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({address:addr})});
-    var data = await r.json();
+  fetch('/api/set-lightning-address', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({address:addr})}).then(function(r){return r.json();}).then(function(data){
     if (data.error) { errEl.textContent = data.error; errEl.style.display = ''; return; }
     document.getElementById('edit-ln-section').style.display = 'none';
     poll();
-  } catch(e) { errEl.textContent = 'Failed: ' + e.message; errEl.style.display = ''; }
+  }).catch(function(e){ errEl.textContent = 'Failed: ' + e.message; errEl.style.display = ''; });
 }
 
 function toggleEditLnAddress() {
@@ -973,17 +959,14 @@ function toggleLowThreshold(checked) {
   document.getElementById('low-threshold-warn').style.display = checked ? '' : 'none';
 }
 
-async function saveRedeemThreshold(val) {
-  try {
-    await fetch('/api/set-redeem-threshold', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({threshold:parseInt(val)})});
-  } catch(e) {}
+function saveRedeemThreshold(val) {
+  fetch('/api/set-redeem-threshold', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({threshold:parseInt(val)})}).catch(function(){});
 }
 
-async function setJobMode(mode) {
-  try {
-    var r = await fetch('/api/set-job-mode', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode:mode})});
+function setJobMode(mode) {
+  fetch('/api/set-job-mode', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode:mode})}).then(function(r){
     if (r.ok) { applyJobModeUI(mode); poll(); }
-  } catch(e) {}
+  }).catch(function(){});
 }
 
 function applyJobModeUI(mode) {
@@ -1007,120 +990,27 @@ function updateFreeTierDisplay(val) {
   document.getElementById('free-tier-value').textContent = val + '%';
 }
 
-async function saveFreeTierPct(val) {
-  try {
-    await fetch('/api/set-free-tier', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pct:parseInt(val)})});
-    poll();
-  } catch(e) {}
+function saveFreeTierPct(val) {
+  fetch('/api/set-free-tier', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pct:parseInt(val)})}).then(function(){poll();}).catch(function(){});
 }
 
-async function setKeepWarm(on) {
-  try {
-    await fetch('/api/set-keep-warm', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({on:on})});
-    poll();
-  } catch(e) {}
+function setKeepWarm(on) {
+  fetch('/api/set-keep-warm', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({on:on})}).then(function(){poll();}).catch(function(){});
 }
 
-async function setContextLength(val) {
-  try {
-    var r = await fetch('/api/set-context-length', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({context_length:parseInt(val)})});
+function setContextLength(val) {
+  fetch('/api/set-context-length', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({context_length:parseInt(val)})}).then(function(r){
     if (r.ok) { document.getElementById('ctx-len-label').textContent = val; poll(); }
-  } catch(e) {}
+  }).catch(function(){});
 }
 
-async function poll() {
-  try {
-    const r = await fetch('/api/status');
-    update(await r.json());
-  } catch(e) {
+function poll() {
+  fetch('/api/status').then(function(r){return r.json();}).then(function(d){
+    update(d);
+  }).catch(function(){
     document.getElementById('updated').textContent = 'connection lost…';
-  }
+  });
   fetchHistory();
-  loadGpuFund();
-}
-
-// ── GPU Fund ──────────────────────────────────────────────────────────
-var gpuInvoiceHash = null;
-
-async function loadGpuFund() {
-  try {
-    const r = await fetch('http://127.0.0.1:11440/api/gpu-fund');
-    const d = await r.json();
-    document.getElementById('gpu-raised').textContent = formatSats(d.raised_sats);
-    document.getElementById('gpu-goal').textContent = formatSats(d.goal_sats);
-    document.getElementById('gpu-percent').textContent = d.percent;
-    document.getElementById('gpu-donors').textContent = d.donors;
-    document.getElementById('gpu-usd').textContent = d.raised_usd.toFixed(2);
-    document.getElementById('gpu-btc').textContent = d.btc_price.toLocaleString();
-    document.getElementById('gpu-bar').style.width = Math.min(d.percent, 100) + '%';
-    
-    // Recent donors
-    const el = document.getElementById('gpu-recent');
-    if (d.recent_donors && d.recent_donors.length > 0) {
-      let html = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Recent Donors</div>';
-      for (const donor of d.recent_donors) {
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
-          <span style="color:var(--text)">${donor.name}</span>
-          <span style="color:var(--orange);font-weight:600">${formatSats(donor.sats)}</span>
-        </div>`;
-      }
-      el.innerHTML = html;
-    }
-  } catch(e) {}
-}
-
-function formatSats(sats) {
-  if (sats >= 1000000) return (sats / 1000000).toFixed(1) + 'M';
-  if (sats >= 1000) return (sats / 1000).toFixed(1) + 'K';
-  return sats.toString();
-}
-
-async function donateGpu(amount) {
-  const name = prompt('Your name (optional):') || 'Anonymous';
-  const msg = prompt('Message (optional):') || '';
-  
-  try {
-    const r = await fetch('http://127.0.0.1:11440/api/gpu-fund/donate', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({amount_sats: amount, name: name, message: msg})
-    });
-    const d = await r.json();
-    if (d.invoice) {
-      gpuInvoiceHash = d.payment_hash;
-      document.getElementById('gpu-invoice').textContent = d.invoice;
-      document.getElementById('gpu-donate-msg').style.display = 'block';
-      document.getElementById('gpu-invoice-status').textContent = `Scan QR or copy invoice — ${amount} sats`;
-    }
-  } catch(e) {
-    alert('Failed to create invoice. Is the gateway running?');
-  }
-}
-
-function donateGpuCustom() {
-  const amount = prompt('Enter amount in sats:');
-  if (amount && parseInt(amount) > 0) donateGpu(parseInt(amount));
-}
-
-async function checkGpuPayment() {
-  if (!gpuInvoiceHash) return;
-  try {
-    const r = await fetch(`http://127.0.0.1:11440/api/gpu-fund/verify/${gpuInvoiceHash}`);
-    const d = await r.json();
-    if (d.status === 'paid') {
-      document.getElementById('gpu-invoice-status').textContent = '✅ Payment received! Thank you!';
-      document.getElementById('gpu-invoice-status').style.color = '#22c55e';
-      gpuInvoiceHash = null;
-      loadGpuFund();
-    } else {
-      document.getElementById('gpu-invoice-status').textContent = '⏳ Waiting for payment...';
-    }
-  } catch(e) {}
-}
-
-function copyInvoice(elId) {
-  const el = document.getElementById(elId);
-  navigator.clipboard.writeText(el.textContent);
 }
 
 // ── Charts ──────────────────────────────────────────────────────────
@@ -1181,11 +1071,9 @@ function initCharts() {
   });
 }
 
-async function fetchHistory() {
+function fetchHistory() {
   if (!chartReady) return;
-  try {
-    var r = await fetch('/api/history?period=' + currentPeriod);
-    var d = await r.json();
+  fetch('/api/history?period=' + currentPeriod).then(function(r){return r.json();}).then(function(d){
     var labels = d.buckets.map(function(b) { return b.label; });
     var dailyJobs = d.buckets.map(function(b) { return b.jobs; });
     var dailyEarned = d.buckets.map(function(b) { return b.earned; });
@@ -1202,7 +1090,7 @@ async function fetchHistory() {
     earningsChart.data.datasets[0].data = dailyEarned;
     earningsChart.data.datasets[1].data = cumEarned;
     earningsChart.update('none');
-  } catch(e) {}
+  }).catch(function(){});
 }
 
 document.getElementById('period-tabs').addEventListener('click', function(e) {
@@ -1216,121 +1104,91 @@ document.getElementById('period-tabs').addEventListener('click', function(e) {
 poll();
 setInterval(poll, 5000);
 
-async function removeModel(tag) {
+function removeModel(tag) {
   if (!confirm('Remove ' + tag + '?\n\nThis will delete the model from disk and free up space.\nYou can re-download it later.')) return;
-  try {
-    var resp = await fetch('/api/remove-model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:tag})});
-    var data = await resp.json();
-    if (!resp.ok) { alert('Error: ' + (data.error || 'unknown')); return; }
-    poll();
-  } catch(e) { alert('Failed: ' + e.message); }
+  fetch('/api/remove-model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:tag})}).then(function(resp){
+    return resp.json().then(function(data){
+      if (!resp.ok) { alert('Error: ' + (data.error || 'unknown')); return; }
+      poll();
+    });
+  }).catch(function(e){ alert('Failed: ' + e.message); });
 }
 
-async function switchModel(tag) {
+function switchModel(tag) {
   if (!confirm('Switch active model to ' + tag + '?\n\nThis will reload the model into memory and re-register with the gateway.')) return;
-  try {
-    var resp = await fetch('/api/switch-model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:tag})});
-    var data = await resp.json();
-    if (!resp.ok) { alert('Error: ' + (data.error || 'unknown')); return; }
-    poll(); // refresh immediately
-  } catch(e) { alert('Failed: ' + e.message); }
+  fetch('/api/switch-model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:tag})}).then(function(resp){
+    return resp.json().then(function(data){
+      if (!resp.ok) { alert('Error: ' + (data.error || 'unknown')); return; }
+      poll();
+    });
+  }).catch(function(e){ alert('Failed: ' + e.message); });
 }
 
-async function pullModel(tag, vramGb) {
-  // Show spinner on download button while checking size
+function pullModel(tag, vramGb) {
   var btnId = 'dl-' + tag.replace(/[:.]/g, '_');
   var dlBtn = document.getElementById(btnId);
   if (dlBtn) { dlBtn.disabled = true; dlBtn.innerHTML = '<span class="spinner"></span> Checking…'; }
 
-  var st = await (await fetch('/api/status')).json();
-  var diskFree = st.disk ? st.disk.free_gb : 0;
-  var diskTotal = st.disk ? st.disk.total_gb : 0;
-
-  // Step 1: Ask Ollama registry for real size (10s timeout on server)
-  var sizeMb = 0;
-  var sizeSource = 'estimate';
-  try {
-    var sizeResp = await fetch('/api/model-size?model=' + encodeURIComponent(tag));
-    var sizeData = await sizeResp.json();
-    if (sizeData.size_mb > 0) { sizeMb = sizeData.size_mb; sizeSource = 'registry'; }
-  } catch(e) {}
-  if (dlBtn) { dlBtn.disabled = false; dlBtn.textContent = 'Download'; }
-
-  // Step 2: Fallback estimate if registry failed
-  if (sizeMb === 0) {
-    sizeMb = Math.max(1024, Math.round((vramGb || 1) * 1.5 * 1024)); // vram * 1.5 GB, min 1 GB
-    sizeSource = 'estimate';
-  }
-
-  var sizeGb = (sizeMb / 1024).toFixed(1);
-  var usedAfter = (diskTotal - diskFree) + (sizeMb / 1024);
-  var usagePct = diskTotal > 0 ? (usedAfter / diskTotal * 100) : 100;
-
-  // Step 3: Abort if would exceed 90% disk usage
-  if (usagePct > 90) {
-    alert('Not enough disk space!\n\n' +
-      'Model size: ~' + sizeGb + ' GB' + (sizeSource === 'estimate' ? ' (estimated)' : '') + '\n' +
-      'Disk free: ' + diskFree.toFixed(1) + ' GB / ' + diskTotal.toFixed(0) + ' GB total\n' +
-      'After download: ' + usagePct.toFixed(0) + '% used\n\n' +
-      'Download aborted — disk usage would exceed 90%.\n' +
-      'Free up space or remove unused models first.');
-    return;
-  }
-
-  if (!confirm('Download ' + tag + '?\n\n' +
-    'Model size: ~' + sizeGb + ' GB' + (sizeSource === 'estimate' ? ' (estimated)' : '') + '\n' +
-    'Disk free: ' + diskFree.toFixed(1) + ' GB / ' + diskTotal.toFixed(0) + ' GB total\n' +
-    'After download: ~' + usagePct.toFixed(0) + '% used\n\n' +
-    'This may take a few minutes depending on your connection.')) return;
-
-  // Show progress in the models section
-  var progDiv = document.getElementById('pull-progress');
-  if (!progDiv) {
-    progDiv = document.createElement('div');
-    progDiv.id = 'pull-progress';
-    progDiv.style.cssText = 'margin-bottom:8px;padding:8px 10px;border:1px solid #f7931a;border-radius:8px;background:var(--wallet-warn-bg);font-size:12px;color:var(--accent)';
-    var ms = document.getElementById('models-section');
-    ms.insertBefore(progDiv, ms.children[1]);
-  }
-  progDiv.innerHTML = '<span class="spinner"></span> Starting download…';
-
-  try {
-    var resp = await fetch('/api/pull-model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:tag})});
-    if (!resp.ok) {
-      var err = await resp.json();
-      alert('Error: ' + (err.error || 'unknown'));
-      return;
-    }
-    var reader = resp.body.getReader();
-    var decoder = new TextDecoder();
-    var buf = '';
-    while (true) {
-      var result = await reader.read();
-      if (result.done) break;
-      buf += decoder.decode(result.value, {stream:true});
-      var lines = buf.split('\n\n');
-      buf = lines.pop();
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].replace(/^data: /, '');
-        if (!line) continue;
-        try {
-          var ev = JSON.parse(line);
-          if (ev.error) { progDiv.textContent = 'Error: ' + ev.error; progDiv.style.borderColor = '#ef4444'; return; }
-          if (ev.status === 'done') { progDiv.textContent = 'Download complete!'; progDiv.style.borderColor = '#4ade80'; progDiv.style.color = '#4ade80';
-            setTimeout(function() { poll(); }, 1000); return; }
-          if (ev.total > 0) {
-            var pct = Math.round(ev.completed / ev.total * 100);
-            progDiv.innerHTML = ev.status + ' <b>' + pct + '%</b> (' + (ev.completed/1048576).toFixed(0) + '/' + (ev.total/1048576).toFixed(0) + ' MB)';
-          } else {
-            progDiv.textContent = ev.status || 'Downloading…';
-          }
-        } catch(e) {}
+  fetch('/api/status').then(function(r){return r.json();}).then(function(st){
+    var diskFree = st.disk ? st.disk.free_gb : 0;
+    var diskTotal = st.disk ? st.disk.total_gb : 0;
+    return fetch('/api/model-size?model=' + encodeURIComponent(tag)).then(function(r){return r.json();}).then(function(sizeData){
+      var sizeMb = 0;
+      var sizeSource = 'estimate';
+      if (sizeData.size_mb > 0) { sizeMb = sizeData.size_mb; sizeSource = 'registry'; }
+      if (dlBtn) { dlBtn.disabled = false; dlBtn.textContent = 'Download'; }
+      if (sizeMb === 0) {
+        sizeMb = Math.max(1024, Math.round((vramGb || 1) * 1.5 * 1024));
+        sizeSource = 'estimate';
       }
-    }
-    progDiv.textContent = 'Download complete!';
-    progDiv.style.borderColor = '#4ade80'; progDiv.style.color = '#4ade80';
-    setTimeout(function() { poll(); }, 1000);
-  } catch(e) { progDiv.textContent = 'Failed: ' + e.message; progDiv.style.borderColor = '#ef4444'; }
+      var sizeGb = (sizeMb / 1024).toFixed(1);
+      var usedAfter = (diskTotal - diskFree) + (sizeMb / 1024);
+      var usagePct = diskTotal > 0 ? (usedAfter / diskTotal * 100) : 100;
+      if (usagePct > 90) {
+        alert('Not enough disk space!\n\nModel size: ~' + sizeGb + ' GB' + (sizeSource === 'estimate' ? ' (estimated)' : '') + '\nDisk free: ' + diskFree.toFixed(1) + ' GB / ' + diskTotal.toFixed(0) + ' GB total\nAfter download: ' + usagePct.toFixed(0) + '% used\n\nDownload aborted — disk usage would exceed 90%.\nFree up space or remove unused models first.');
+        return;
+      }
+      if (!confirm('Download ' + tag + '?\n\nModel size: ~' + sizeGb + ' GB' + (sizeSource === 'estimate' ? ' (estimated)' : '') + '\nDisk free: ' + diskFree.toFixed(1) + ' GB / ' + diskTotal.toFixed(0) + ' GB total\nAfter download: ~' + usagePct.toFixed(0) + '% used\n\nThis may take a few minutes depending on your connection.')) return;
+      var progDiv = document.getElementById('pull-progress');
+      if (!progDiv) {
+        progDiv = document.createElement('div');
+        progDiv.id = 'pull-progress';
+        progDiv.style.cssText = 'margin-bottom:8px;padding:8px 10px;border:1px solid #f7931a;border-radius:8px;background:var(--wallet-warn-bg);font-size:12px;color:var(--accent)';
+        var ms = document.getElementById('models-section');
+        ms.insertBefore(progDiv, ms.children[1]);
+      }
+      progDiv.innerHTML = '<span class="spinner"></span> Starting download…';
+      fetch('/api/pull-model', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model:tag})}).then(function(resp){
+        if (!resp.ok) { return resp.json().then(function(err){ alert('Error: ' + (err.error || 'unknown')); }); }
+        var reader = resp.body.getReader();
+        var decoder = new TextDecoder();
+        var buf = '';
+        function readChunk() {
+          reader.read().then(function(result) {
+            if (result.done) { progDiv.textContent = 'Download complete!'; progDiv.style.borderColor = '#4ade80'; progDiv.style.color = '#4ade80'; setTimeout(function(){poll();}, 1000); return; }
+            buf += decoder.decode(result.value, {stream:true});
+            var lines = buf.split('\n\n');
+            buf = lines.pop();
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i].replace(/^data: /, '');
+              if (!line) continue;
+              try {
+                var ev = JSON.parse(line);
+                if (ev.error) { progDiv.textContent = 'Error: ' + ev.error; progDiv.style.borderColor = '#ef4444'; return; }
+                if (ev.status === 'done') { progDiv.textContent = 'Download complete!'; progDiv.style.borderColor = '#4ade80'; progDiv.style.color = '#4ade80'; setTimeout(function(){poll();}, 1000); return; }
+                if (ev.total > 0) {
+                  var pct = Math.round(ev.completed / ev.total * 100);
+                  progDiv.innerHTML = ev.status + ' <b>' + pct + '%</b> (' + (ev.completed/1048576).toFixed(0) + '/' + (ev.total/1048576).toFixed(0) + ' MB)';
+                } else { progDiv.textContent = ev.status || 'Downloading…'; }
+              } catch(e) {}
+            }
+            readChunk();
+          });
+        }
+        readChunk();
+      }).catch(function(e){ progDiv.textContent = 'Failed: ' + e.message; progDiv.style.borderColor = '#ef4444'; });
+    });
+  }).catch(function(){});
 }
 </script>
 </body>
